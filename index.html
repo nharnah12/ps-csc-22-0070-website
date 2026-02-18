@@ -1,99 +1,3527 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  </head>
-  <body>
-    <a-scene>
+<html lang="en">
 
-      <!-- Room Walls -->
-      <!-- Floor -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="#d2b48c"></a-plane>
-      
-      <!-- Back Wall -->
-      <a-plane position="0 2.5 -5" rotation="0 0 0" width="10" height="5" color="#f5f5dc"></a-plane>
-      
-      <!-- Left Wall -->
-      <a-plane position="-5 2.5 0" rotation="0 90 0" width="10" height="5" color="#f5f5dc"></a-plane>
-      
-      <!-- Right Wall -->
-      <a-plane position="5 2.5 0" rotation="0 -90 0" width="10" height="5" color="#f5f5dc"></a-plane>
-      
-      <!-- Ceiling -->
-      <a-plane position="0 5 0" rotation="90 0 0" width="10" height="10" color="#ffffff"></a-plane>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Villa - 3D Interactive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            background: #0a0a0a;
+            height: 100vh;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* ── SIDEBAR ── */
+        
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(8, 8, 8, 0.96) 0%, rgba(12, 12, 12, 0.92) 100%);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0 20px;
+            z-index: 100;
+        }
+        
+        .sidebar-logo {
+            padding: 0 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 18px;
+        }
+        
+        .sidebar-logo h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 300;
+            color: #e8d9b8;
+            letter-spacing: 0.05em;
+            line-height: 1.3;
+        }
+        
+        .sidebar-logo p {
+            font-size: 9px;
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        
+        .view-section {
+            padding: 0 14px;
+            margin-bottom: 6px;
+        }
+        
+        .section-label {
+            font-size: 8px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.25);
+            padding: 0 6px;
+            margin-bottom: 6px;
+        }
+        
+        .viewBtn {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.55);
+            border: none;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            text-align: left;
+            transition: all 0.25s ease;
+            margin-bottom: 1px;
+        }
+        
+        .viewBtn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .viewBtn.active {
+            background: rgba(232, 217, 184, 0.1);
+            color: #e8d9b8;
+            border-left: 2px solid #c8a96e;
+            padding-left: 8px;
+        }
+        
+        .viewBtn .icon {
+            font-size: 13px;
+            width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 10px 14px;
+        }
+        /* ── BOTTOM CONTROLS ── */
+        
+        #bottomBar {
+            margin-top: auto;
+            padding: 14px 14px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        #toggleWalls {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 9px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 300;
+            letter-spacing: 0.08em;
+            transition: all 0.25s ease;
+        }
+        
+        #toggleWalls:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        /* ── VIEW NAME OVERLAY ── */
+        
+        #viewLabel {
+            position: fixed;
+            bottom: 32px;
+            left: 40px;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        
+        #viewLabel .name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.88);
+            letter-spacing: 0.04em;
+            line-height: 1;
+            text-shadow: 0 2px 30px rgba(0, 0, 0, 0.8);
+        }
+        
+        #viewLabel .sub {
+            font-size: 9px;
+            font-weight: 200;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 5px;
+        }
+        /* ── TRANSITION OVERLAY ── */
+        
+        #fadeOverlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            transition: opacity 0.35s ease;
+        }
+        
+        #fadeOverlay.fading {
+            opacity: 0.55;
+        }
+        /* ── COMPASS ── */
+        
+        #compass {
+            position: fixed;
+            bottom: 28px;
+            right: 220px;
+            width: 42px;
+            height: 42px;
+            opacity: 0.4;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        #compass svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
 
-      <!-- Lighting -->
-      <a-light type="ambient" color="#BBB"></a-light>
-      <a-light type="point" position="0 4 -3" intensity="0.8"></a-light>
+<body>
 
-      <!-- Table Top -->
-      <a-box position="0 1 -3" width="2" height="0.2" depth="1" color="#8b4513"></a-box>
+    <div id="fadeOverlay"></div>
 
-      <!-- Table Legs -->
-      <a-box position="-0.9 0.5 -2.6" width="0.1" height="1" depth="0.1" color="#8b4513"></a-box>
-      <a-box position="0.9 0.5 -2.6" width="0.1" height="1" depth="0.1" color="#8b4513"></a-box>
-      <a-box position="-0.9 0.5 -3.4" width="0.1" height="1" depth="0.1" color="#8b4513"></a-box>
-      <a-box position="0.9 0.5 -3.4" width="0.1" height="1" depth="0.1" color="#8b4513"></a-box>
+    <div id="viewLabel">
+        <div class="name" id="viewName">Front View</div>
+        <div class="sub" id="viewSub">Exterior · Ground Level</div>
+    </div>
 
-      <!-- Chair 1 - Left Side (facing right) -->
-      <!-- Seat -->
-      <a-box position="-1.5 0.6 -3" width="0.5" height="0.08" depth="0.5" color="#a0522d"></a-box>
-      <!-- Backrest -->
-      <a-box position="-1.75 0.9 -3" width="0.05" height="0.6" depth="0.5" color="#a0522d"></a-box>
-      <!-- Front Left Leg -->
-      <a-cylinder position="-1.3 0.3 -3.2" radius="0.03" height="0.6" color="#654321"></a-cylinder>
-      <!-- Front Right Leg -->
-      <a-cylinder position="-1.3 0.3 -2.8" radius="0.03" height="0.6" color="#654321"></a-cylinder>
-      <!-- Back Left Leg -->
-      <a-cylinder position="-1.7 0.6 -3.2" radius="0.03" height="1.2" color="#654321"></a-cylinder>
-      <!-- Back Right Leg -->
-      <a-cylinder position="-1.7 0.6 -2.8" radius="0.03" height="1.2" color="#654321"></a-cylinder>
-      <!-- Armrest Left -->
-      <a-box position="-1.5 0.8 -3.2" width="0.4" height="0.06" depth="0.06" color="#8b4513"></a-box>
-      <!-- Armrest Right -->
-      <a-box position="-1.5 0.8 -2.8" width="0.4" height="0.06" depth="0.06" color="#8b4513"></a-box>
+    <div id="compass">
+        <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="21" cy="21" r="20" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+        <polygon points="21,4 23.5,21 21,18 18.5,21" fill="#e8d9b8"/>
+        <polygon points="21,38 23.5,21 21,24 18.5,21" fill="rgba(255,255,255,0.25)"/>
+        <text x="21" y="9" text-anchor="middle" fill="#e8d9b8" font-size="5" font-family="Montserrat" font-weight="300">N</text>
+    </svg>
+    </div>
 
-      <!-- Chair 2 - Right Side (facing left) -->
-      <!-- Seat -->
-      <a-box position="1.5 0.6 -3" width="0.5" height="0.08" depth="0.5" color="#a0522d"></a-box>
-      <!-- Backrest -->
-      <a-box position="1.75 0.9 -3" width="0.05" height="0.6" depth="0.5" color="#a0522d"></a-box>
-      <!-- Front Left Leg -->
-      <a-cylinder position="1.3 0.3 -2.8" radius="0.03" height="0.6" color="#654321"></a-cylinder>
-      <!-- Front Right Leg -->
-      <a-cylinder position="1.3 0.3 -3.2" radius="0.03" height="0.6" color="#654321"></a-cylinder>
-      <!-- Back Left Leg -->
-      <a-cylinder position="1.7 0.6 -2.8" radius="0.03" height="1.2" color="#654321"></a-cylinder>
-      <!-- Back Right Leg -->
-      <a-cylinder position="1.7 0.6 -3.2" radius="0.03" height="1.2" color="#654321"></a-cylinder>
-      <!-- Armrest Left -->
-      <a-box position="1.5 0.8 -2.8" width="0.4" height="0.06" depth="0.06" color="#8b4513"></a-box>
-      <!-- Armrest Right -->
-      <a-box position="1.5 0.8 -3.2" width="0.4" height="0.06" depth="0.06" color="#8b4513"></a-box>
+    <div id="sidebar">
+        <div class="sidebar-logo">
+            <h1>Villa<br>Lumière</h1>
+            <p>3D Interactive Tour</p>
+        </div>
 
-      <!-- Milo Tin -->
-      <a-cylinder position="-0.2 1.15 -3" radius="0.15" height="0.4" color="green"></a-cylinder>
-      <!-- Milo Text -->
-      <a-text value="MILO" position="-0.2 1.2 -2.85" rotation="0 0 0" color="yellow" align="center" width="1.5"></a-text>
+        <div class="view-section">
+            <div class="section-label">Exterior</div>
+            <button class="viewBtn active" onclick="villApp.setView('front')" data-view="front">
+            <span class="icon">⬛</span> Front View
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('aerial')" data-view="aerial">
+            <span class="icon">◻</span> Aerial
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('side')" data-view="side">
+            <span class="icon">▷</span> Side View
+        </button>
+        </div>
 
-      <!-- Milk Tin -->
-      <a-cylinder position="0.2 1.12 -3" radius="0.12" height="0.3" color="white"></a-cylinder>
-      <!-- Milk Text -->
-      <a-text value="MILK" position="0.2 1.15 -2.88" rotation="0 0 0" color="black" align="center" width="1.2"></a-text>
+        <div class="divider"></div>
 
-      <!-- Cup 1 -->
-      <a-cone position="-0.9 1.1 -3" radius-bottom="0.08" radius-top="0.11" height="0.2" color="grey"></a-cone>
-      <!-- Cup 1 Handle -->
-      <a-torus position="-0.82 1.1 -3" radius="0.06" radius-tubular="0.015" rotation="0 0 90" color="grey"></a-torus>
+        <div class="view-section">
+            <div class="section-label">Amenities</div>
+            <button class="viewBtn" onclick="villApp.setView('pool')" data-view="pool">
+            <span class="icon">≋</span> Pool
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('lounge')" data-view="lounge">
+            <span class="icon">◈</span> Gym Lounge
+        </button>
+        </div>
 
-      <!-- Cup 2 -->
-      <a-cone position="0.9 1.1 -3" radius-bottom="0.08" radius-top="0.11" height="0.2" color="grey"></a-cone>
-      <!-- Cup 2 Handle -->
-      <a-torus position="0.98 1.1 -3" radius="0.06" radius-tubular="0.015" rotation="0 0 90" color="grey"></a-torus>
+        <div class="divider"></div>
 
-      <!-- Camera -->
-      <a-entity camera look-controls position="0 1.6 0"></a-entity>
+        <div class="view-section">
+            <div class="section-label">Interior</div>
+            <button class="viewBtn" onclick="villApp.setView('living')" data-view="living">
+            <span class="icon">⊡</span> Living Room
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('kitchen')" data-view="kitchen">
+            <span class="icon">◇</span> Kitchen
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('bedroom')" data-view="bedroom">
+            <span class="icon">◎</span> Bedroom
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('bathroom')" data-view="bathroom">
+            <span class="icon">○</span> Bathroom
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('gym')" data-view="gym">
+            <span class="icon">◈</span> Gym
+        </button>
+            <button class="viewBtn" onclick="villApp.setView('upperBed')" data-view="upperBed">
+            <span class="icon">◎</span> Upper Bed
+        </button>
+        </div>
 
-    </a-scene>
-  </body>
+        <div id="bottomBar">
+            <button id="toggleWalls" onclick="villApp.toggleWalls()">⬜ Toggle Walls</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // ════════════════════════════════════════════════════════════
+        // CINEMATIC CAMERA DEFINITIONS
+        // Each view has: pos, tgt, fov, minDist, maxDist, label, sub
+        // ════════════════════════════════════════════════════════════
+        const VIEWS = {
+            front: {
+                pos: [28, 8, 52],
+                tgt: [-2, 4, 0],
+                fov: 42,
+                minDist: 2,
+                maxDist: 120,
+                label: 'Front View',
+                sub: 'Exterior · Ground Level'
+            },
+            aerial: {
+                pos: [18, 72, 28],
+                tgt: [0, 2, 8],
+                fov: 38,
+                minDist: 5,
+                maxDist: 200,
+                label: 'Aerial View',
+                sub: 'Bird\'s Eye · Overview'
+            },
+            side: {
+                pos: [-55, 9, -8],
+                tgt: [0, 5, -2],
+                fov: 44,
+                minDist: 2,
+                maxDist: 120,
+                label: 'Side View',
+                sub: 'Exterior · West Facade'
+            },
+            pool: {
+                pos: [-18, 6, 62],
+                tgt: [0, 0.5, 30],
+                fov: 52,
+                minDist: 2,
+                maxDist: 80,
+                label: 'Swimming Pool',
+                sub: 'Amenity · Outdoor'
+            },
+            lounge: {
+                pos: [-11, 9.5, 14],
+                tgt: [-11, 7.2, -2],
+                fov: 55,
+                minDist: 1,
+                maxDist: 30,
+                label: 'Gym Lounge',
+                sub: 'Upper Floor · West Wing'
+            },
+            living: {
+                pos: [-8, 3.2, 8],
+                tgt: [-11, 1.8, -3],
+                fov: 65,
+                minDist: 0.5,
+                maxDist: 20,
+                label: 'Living Room',
+                sub: 'Ground Floor · West Wing'
+            },
+            kitchen: {
+                pos: [5, 3.0, 10],
+                tgt: [0, 1.8, 0],
+                fov: 60,
+                minDist: 0.5,
+                maxDist: 20,
+                label: 'Kitchen',
+                sub: 'Ground Floor · Central'
+            },
+            bedroom: {
+                pos: [8, 3.0, 6],
+                tgt: [11, 1.4, -5],
+                fov: 62,
+                minDist: 0.5,
+                maxDist: 20,
+                label: 'Master Bedroom',
+                sub: 'Ground Floor · East Wing'
+            },
+            bathroom: {
+                pos: [14.5, 2.8, 4],
+                tgt: [13.5, 1.8, 0],
+                fov: 55,
+                minDist: 0.5,
+                maxDist: 12,
+                label: 'Bathroom',
+                sub: 'Ground Floor · East Wing'
+            },
+            gym: {
+                pos: [5, 9.5, 18],
+                tgt: [0, 7.8, 0],
+                fov: 58,
+                minDist: 1,
+                maxDist: 30,
+                label: 'Fitness Studio',
+                sub: 'Upper Floor · Central'
+            },
+            upperBed: {
+                pos: [8, 9.8, 8],
+                tgt: [11, 8.2, -3],
+                fov: 60,
+                minDist: 0.5,
+                maxDist: 22,
+                label: 'Upper Bedroom',
+                sub: 'Upper Floor · East Wing'
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════
+        // CAMERA TRANSITION ENGINE
+        // ════════════════════════════════════════════════════════════
+        class CameraTransition {
+            constructor(camera, controls) {
+                this.camera = camera;
+                this.controls = controls;
+                this.active = false;
+                this.startPos = new THREE.Vector3();
+                this.endPos = new THREE.Vector3();
+                this.startTgt = new THREE.Vector3();
+                this.endTgt = new THREE.Vector3();
+                this.startFov = 50;
+                this.endFov = 50;
+                this.progress = 0;
+                this.duration = 1200; // ms
+                this.startTime = 0;
+            }
+
+            // Smooth easing function (ease-in-out cubic)
+            ease(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            go(view) {
+                this.startPos.copy(this.camera.position);
+                this.startTgt.copy(this.controls.target);
+                this.startFov = this.camera.fov;
+
+                this.endPos.set(...view.pos);
+                this.endTgt.set(...view.tgt);
+                this.endFov = view.fov || 50;
+
+                this.controls.minDistance = view.minDist || 1;
+                this.controls.maxDistance = view.maxDist || 150;
+
+                this.progress = 0;
+                this.startTime = performance.now();
+                this.active = true;
+            }
+
+            update() {
+                if (!this.active) return;
+                const elapsed = performance.now() - this.startTime;
+                const t = Math.min(elapsed / this.duration, 1);
+                const e = this.ease(t);
+
+                this.camera.position.lerpVectors(this.startPos, this.endPos, e);
+                this.controls.target.lerpVectors(this.startTgt, this.endTgt, e);
+                this.camera.fov = this.startFov + (this.endFov - this.startFov) * e;
+                this.camera.updateProjectionMatrix();
+
+                if (t >= 1) this.active = false;
+            }
+        }
+
+        class Villa3DApp {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                this.textures = {};
+                this.exteriorWalls = null;
+                this.wallsVisible = true;
+                this.poolWaterMesh = null;
+                this.clock = new THREE.Clock();
+                this.transition = null;
+                this.currentView = 'front';
+            }
+
+            async init() {
+                await this.loadTextures();
+                this.setupScene();
+                this.createExterior();
+                this.createInterior();
+                this.createGymLounge();
+                this.createSwimmingPool();
+                this.createCars();
+                this.createPoolToys();
+                this.createTrees();
+                this.setupLighting();
+                this.setupControls();
+                this.transition = new CameraTransition(this.camera, this.controls);
+                this.animate();
+                this.setupEventListeners();
+            }
+
+            async loadTextures() {
+                var loader = new THREE.TextureLoader();
+                var cfg = {
+                    wall: {
+                        path: 'textures/wall.jpg',
+                        fb: '#f5f5dc'
+                    },
+                    roof: {
+                        path: 'textures/roof.jpg',
+                        fb: '#2c2c2c'
+                    },
+                    wood_floor: {
+                        path: 'textures/floor_wood.jpg',
+                        fb: '#8b6f47'
+                    },
+                    marble: {
+                        path: 'textures/marble.jpg',
+                        fb: '#e8e8e8'
+                    },
+                    concrete: {
+                        path: 'textures/concrete.jpg',
+                        fb: '#666666'
+                    },
+                    grass: {
+                        path: 'textures/grass.jpg',
+                        fb: '#4a7c3a'
+                    }
+                };
+                for (var key in cfg) this.textures[key] = await this.loadOneTex(loader, cfg[key].path, cfg[key].fb);
+                this.textures.wall.repeat.set(4, 4);
+                this.textures.wood_floor.repeat.set(3, 3);
+                this.textures.marble.repeat.set(2, 2);
+                this.textures.concrete.repeat.set(2, 2);
+                this.textures.grass.repeat.set(8, 8);
+                this.textures.pool_tile = this.makePoolTileTex();
+                this.textures.pool_tile.wrapS = this.textures.pool_tile.wrapT = THREE.RepeatWrapping;
+                this.textures.pool_tile.repeat.set(10, 7);
+                this.textures.water_normal = this.makeWaterNormalTex();
+                this.textures.water_normal.wrapS = this.textures.water_normal.wrapT = THREE.RepeatWrapping;
+                this.textures.water_normal.repeat.set(4, 4);
+                this.textures.pool_deck = this.makePoolDeckTex();
+                this.textures.pool_deck.wrapS = this.textures.pool_deck.wrapT = THREE.RepeatWrapping;
+                this.textures.pool_deck.repeat.set(8, 6);
+                this.textures.wall_stone = this.makeWallStoneTex();
+                this.textures.wall_stone.wrapS = this.textures.wall_stone.wrapT = THREE.RepeatWrapping;
+                this.textures.wall_stone.repeat.set(6, 2);
+                this.textures.herringbone = this.makeHerringboneTex();
+                this.textures.herringbone.wrapS = this.textures.herringbone.wrapT = THREE.RepeatWrapping;
+                this.textures.herringbone.repeat.set(4, 4);
+                this.textures.velvet = this.makeVelvetTex();
+                this.textures.velvet.wrapS = this.textures.velvet.wrapT = THREE.RepeatWrapping;
+                this.textures.velvet.repeat.set(2, 2);
+                this.textures.wainscot = this.makeWainscotTex();
+                this.textures.wainscot.wrapS = this.textures.wainscot.wrapT = THREE.RepeatWrapping;
+                this.textures.wainscot.repeat.set(3, 2);
+            }
+
+            makeHerringboneTex() {
+                var c = document.createElement('canvas');
+                c.width = c.height = 512;
+                var ctx = c.getContext('2d');
+                ctx.fillStyle = '#c8a87a';
+                ctx.fillRect(0, 0, 512, 512);
+                var tw = 32,
+                    th = 16;
+                for (var row = 0; row < 64; row++)
+                    for (var col = 0; col < 32; col++) {
+                        var x = (col * tw * 2) + (row % 2) * tw,
+                            y = row * th;
+                        var shade = (Math.random() * 20 - 10) | 0;
+                        ctx.fillStyle = 'rgb(' + (180 + shade) + ',' + (140 + shade) + ',' + (100 + shade) + ')';
+                        ctx.fillRect(x, y, tw - 2, th - 1);
+                        ctx.fillStyle = 'rgb(' + (170 + shade) + ',' + (130 + shade) + ',' + (90 + shade) + ')';
+                        ctx.fillRect(x + tw, y, tw - 2, th - 1);
+                        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                        ctx.fillRect(x, y, tw - 2, 3);
+                    }
+                return new THREE.CanvasTexture(c);
+            }
+            makeVelvetTex() {
+                var c = document.createElement('canvas');
+                c.width = c.height = 256;
+                var ctx = c.getContext('2d');
+                var imgData = ctx.createImageData(256, 256);
+                var d = imgData.data;
+                for (var py = 0; py < 256; py++)
+                    for (var px = 0; px < 256; px++) {
+                        var idx = (py * 256 + px) * 4;
+                        var v = (Math.sin(px * 0.3) * Math.cos(py * 0.3) + 1) / 2;
+                        var noise = Math.random() * 0.12;
+                        d[idx] = (90 + v * 40 + noise * 30) | 0;
+                        d[idx + 1] = (50 + v * 20 + noise * 15) | 0;
+                        d[idx + 2] = (120 + v * 60 + noise * 30) | 0;
+                        d[idx + 3] = 255;
+                    }
+                ctx.putImageData(imgData, 0, 0);
+                return new THREE.CanvasTexture(c);
+            }
+            makeWainscotTex() {
+                var c = document.createElement('canvas');
+                c.width = 512;
+                c.height = 256;
+                var ctx = c.getContext('2d');
+                ctx.fillStyle = '#f0ece4';
+                ctx.fillRect(0, 0, 512, 256);
+                var pw = 100,
+                    ph = 110,
+                    mg = 8;
+                for (var r = 0; r < 2; r++)
+                    for (var col = 0; col < 5; col++) {
+                        var bx = col * (pw + mg) + mg,
+                            by = r * (ph + mg) + mg;
+                        ctx.strokeStyle = '#c8c0b0';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(bx, by, pw, ph);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(bx + 5, by + 5, pw - 10, ph - 10);
+                        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+                        ctx.fillRect(bx + 3, by + ph - 6, pw - 3, 6);
+                    }
+                return new THREE.CanvasTexture(c);
+            }
+            makePoolTileTex() {
+                var c = document.createElement('canvas');
+                c.width = c.height = 512;
+                var ctx = c.getContext('2d');
+                var tileSize = 32,
+                    grout = 3;
+                ctx.fillStyle = '#5ab4cc';
+                ctx.fillRect(0, 0, 512, 512);
+                for (var ty = 0; ty < 512; ty += tileSize)
+                    for (var tx = 0; tx < 512; tx += tileSize) {
+                        var hShift = (Math.sin(tx * 0.08) * 12 + Math.cos(ty * 0.07) * 8) | 0;
+                        var base = 100 + hShift,
+                            g = Math.min(255, Math.max(0, (160 + (Math.random() * 20 - 10)) | 0));
+                        ctx.fillStyle = 'rgb(' + base + ',' + g + ',' + (220 + hShift) + ')';
+                        ctx.fillRect(tx + grout, ty + grout, tileSize - grout * 2, tileSize - grout * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+                        ctx.fillRect(tx + grout, ty + grout, 6, 6);
+                    }
+                ctx.fillStyle = '#2a6678';
+                for (var gy = 0; gy < 512; gy += tileSize) ctx.fillRect(0, gy, 512, grout);
+                for (var gx = 0; gx < 512; gx += tileSize) ctx.fillRect(gx, 0, grout, 512);
+                return new THREE.CanvasTexture(c);
+            }
+            makeWaterNormalTex() {
+                var c = document.createElement('canvas');
+                c.width = c.height = 512;
+                var ctx = c.getContext('2d');
+                var imgData = ctx.createImageData(512, 512);
+                var d = imgData.data;
+                for (var py = 0; py < 512; py++)
+                    for (var px = 0; px < 512; px++) {
+                        var idx = (py * 512 + px) * 4;
+                        var v = (Math.sin(px * 0.18) * Math.cos(py * 0.14) + Math.sin(px * 0.07 + py * 0.11) * 0.5 + Math.cos(px * 0.23 - py * 0.09) * 0.3);
+                        var bright = ((v + 1.8) / 3.6 * 255) | 0;
+                        d[idx] = bright;
+                        d[idx + 1] = bright;
+                        d[idx + 2] = bright + 30;
+                        d[idx + 3] = 255;
+                    }
+                ctx.putImageData(imgData, 0, 0);
+                return new THREE.CanvasTexture(c);
+            }
+            makePoolDeckTex() {
+                var c = document.createElement('canvas');
+                c.width = c.height = 512;
+                var ctx = c.getContext('2d');
+                ctx.fillStyle = '#cbbfa8';
+                ctx.fillRect(0, 0, 512, 512);
+                for (var i = 0; i < 4000; i++) {
+                    var nx = Math.random() * 512,
+                        ny = Math.random() * 512,
+                        nb = (Math.random() * 30 - 15) | 0;
+                    ctx.fillStyle = 'rgba(' + (Math.min(255, Math.max(0, 195 + nb))) + ',' + (Math.min(255, Math.max(0, 183 + nb))) + ',' + (Math.min(255, Math.max(0, 163 + nb))) + ',0.18)';
+                    ctx.fillRect(nx, ny, Math.random() * 4 + 1, Math.random() * 4 + 1);
+                }
+                var tS = 85,
+                    gr = 4;
+                ctx.strokeStyle = '#a09080';
+                ctx.lineWidth = gr;
+                for (var lx = 0; lx < 512; lx += tS) {
+                    ctx.beginPath();
+                    ctx.moveTo(lx, 0);
+                    ctx.lineTo(lx, 512);
+                    ctx.stroke();
+                }
+                for (var ly = 0; ly < 512; ly += tS) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, ly);
+                    ctx.lineTo(512, ly);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = 'rgba(0,0,0,0.06)';
+                for (var tsy = 0; tsy < 512; tsy += tS)
+                    for (var tsx = 0; tsx < 512; tsx += tS) {
+                        ctx.fillRect(tsx + gr, tsy + gr, tS - gr, 4);
+                        ctx.fillRect(tsx + gr, tsy + gr, 4, tS - gr);
+                    }
+                return new THREE.CanvasTexture(c);
+            }
+            makeWallStoneTex() {
+                var c = document.createElement('canvas');
+                c.width = 512;
+                c.height = 256;
+                var ctx = c.getContext('2d');
+                ctx.fillStyle = '#d8cfc4';
+                ctx.fillRect(0, 0, 512, 256);
+                var bH = 52,
+                    bW = 110,
+                    mortar = 5,
+                    rows = Math.ceil(256 / bH);
+                for (var r = 0; r < rows; r++) {
+                    var offset = (r % 2 === 0) ? 0 : bW / 2;
+                    for (var col = 0; col < Math.ceil(512 / bW) + 1; col++) {
+                        var bx = col * bW - offset,
+                            by = r * bH,
+                            shade = (Math.random() * 28 - 14) | 0;
+                        ctx.fillStyle = 'rgb(' + (Math.min(255, Math.max(0, 205 + shade))) + ',' + (Math.min(255, Math.max(0, 195 + shade))) + ',' + (Math.min(255, Math.max(0, 182 + shade))) + ')';
+                        ctx.fillRect(bx + mortar, by + mortar, bW - mortar * 2, bH - mortar * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+                        ctx.fillRect(bx + mortar, by + mortar, bW - mortar * 2, 6);
+                        ctx.fillStyle = 'rgba(0,0,0,0.10)';
+                        ctx.fillRect(bx + mortar, by + bH - mortar * 2, bW - mortar * 2, 6);
+                    }
+                }
+                ctx.strokeStyle = '#b8ae9e';
+                ctx.lineWidth = mortar;
+                for (var mr = 0; mr < rows + 1; mr++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, mr * bH);
+                    ctx.lineTo(512, mr * bH);
+                    ctx.stroke();
+                }
+                return new THREE.CanvasTexture(c);
+            }
+
+            loadOneTex(loader, path, fallback) {
+                var self = this;
+                return new Promise(function(resolve) {
+                    loader.load(path, function(t) {
+                            t.encoding = THREE.sRGBEncoding;
+                            t.wrapS = t.wrapT = THREE.RepeatWrapping;
+                            resolve(t);
+                        },
+                        undefined,
+                        function() {
+                            resolve(self.makeFallbackTex(fallback));
+                        });
+                });
+            }
+            makeFallbackTex(color) {
+                var c = document.createElement('canvas');
+                c.width = c.height = 512;
+                var x = c.getContext('2d');
+                x.fillStyle = color;
+                x.fillRect(0, 0, 512, 512);
+                return new THREE.CanvasTexture(c);
+            }
+
+            setupScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87CEEB);
+                this.scene.fog = new THREE.Fog(0x87CEEB, 150, 380);
+                this.camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(28, 8, 52);
+                this.renderer = new THREE.WebGLRenderer({
+                    antialias: true
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.renderer.outputEncoding = THREE.sRGBEncoding;
+                this.renderer.toneMapping = THREE.ReinhardToneMapping;
+                this.renderer.toneMappingExposure = 1.0;
+                document.body.appendChild(this.renderer.domElement);
+                var gGeo = new THREE.PlaneGeometry(400, 400, 50, 50);
+                var gMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.grass,
+                    roughness: 0.95
+                });
+                var ground = new THREE.Mesh(gGeo, gMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                var pos = ground.geometry.attributes.position.array;
+                for (var i = 0; i < pos.length; i += 3) pos[i + 2] += Math.random() * 0.2 - 0.1;
+                ground.geometry.attributes.position.needsUpdate = true;
+                ground.geometry.computeVertexNormals();
+                this.scene.add(ground);
+            }
+
+            setupLighting() {
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+                var sun = new THREE.DirectionalLight(0xffffff, 1.5);
+                sun.position.set(50, 60, 30);
+                sun.castShadow = true;
+                sun.shadow.mapSize.width = sun.shadow.mapSize.height = 4096;
+                sun.shadow.camera.left = -60;
+                sun.shadow.camera.right = 60;
+                sun.shadow.camera.top = 60;
+                sun.shadow.camera.bottom = -60;
+                sun.shadow.camera.near = 0.5;
+                sun.shadow.camera.far = 200;
+                sun.shadow.bias = -0.0001;
+                this.scene.add(sun);
+                var fill = new THREE.DirectionalLight(0xffd4a3, 0.6);
+                fill.position.set(-30, 20, -30);
+                this.scene.add(fill);
+                this.scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7c3a, 0.7));
+                [
+                    [0, 4, 0, 0.5],
+                    [-8, 4, 0, 0.4],
+                    [9, 3.5, 0, 0.4],
+                    [0, 9, 0, 0.6]
+                ].forEach(function(p) {
+                    var l = new THREE.PointLight(0xffd4a3, p[3], 25);
+                    l.position.set(p[0], p[1], p[2]);
+                    this.scene.add(l);
+                }.bind(this));
+                var pg1 = new THREE.PointLight(0x0055ff, 3.0, 22);
+                pg1.position.set(-6, 0.2, 28);
+                this.scene.add(pg1);
+                var pg2 = new THREE.PointLight(0x0077ff, 2.8, 22);
+                pg2.position.set(6, 0.2, 28);
+                this.scene.add(pg2);
+                var pg3 = new THREE.PointLight(0x0044dd, 2.2, 18);
+                pg3.position.set(0, 0.2, 36);
+                this.scene.add(pg3);
+                var pg4 = new THREE.PointLight(0x0066ee, 2.0, 16);
+                pg4.position.set(0, 0.2, 24);
+                this.scene.add(pg4);
+            }
+
+            createMaterials() {
+                return {
+                    roof: new THREE.MeshStandardMaterial({
+                        map: this.textures.roof,
+                        metalness: 0.2,
+                        roughness: 0.6
+                    }),
+                    glass: new THREE.MeshPhysicalMaterial({
+                        color: 0xa0d8ff,
+                        metalness: 0.1,
+                        roughness: 0.2,
+                        transmission: 0.7,
+                        transparent: true,
+                        opacity: 0.9,
+                        ior: 1.45,
+                        thickness: 0.02,
+                        clearcoat: 0.6,
+                        clearcoatRoughness: 0.3,
+                        side: THREE.DoubleSide,
+                        depthWrite: true
+                    }),
+                    plaster: new THREE.MeshStandardMaterial({
+                        map: this.textures.wall,
+                        metalness: 0.05,
+                        roughness: 0.85
+                    }),
+                    concrete: new THREE.MeshStandardMaterial({
+                        map: this.textures.concrete,
+                        metalness: 0.15,
+                        roughness: 0.7
+                    }),
+                    interiorWall: new THREE.MeshStandardMaterial({
+                        color: 0xf0f0e8,
+                        roughness: 0.9
+                    }),
+                    woodFloor: new THREE.MeshStandardMaterial({
+                        map: this.textures.wood_floor,
+                        metalness: 0,
+                        roughness: 0.7
+                    }),
+                    marble: new THREE.MeshStandardMaterial({
+                        map: this.textures.marble,
+                        metalness: 0.1,
+                        roughness: 0.3
+                    }),
+                    fabricGray: new THREE.MeshStandardMaterial({
+                        color: 0x8a8a8a,
+                        roughness: 0.95
+                    }),
+                    fabricBeige: new THREE.MeshStandardMaterial({
+                        color: 0xd4c5b0,
+                        roughness: 0.95
+                    }),
+                    darkWood: new THREE.MeshStandardMaterial({
+                        color: 0x3a2817,
+                        roughness: 0.7
+                    }),
+                    doorFrame: new THREE.MeshStandardMaterial({
+                        color: 0x4a3728,
+                        roughness: 0.7,
+                        metalness: 0.1
+                    }),
+                    doorHandle: new THREE.MeshStandardMaterial({
+                        color: 0xccaa77,
+                        metalness: 0.8,
+                        roughness: 0.2
+                    }),
+                    rubberFloor: new THREE.MeshStandardMaterial({
+                        color: 0x2c2c2c,
+                        roughness: 0.9,
+                        metalness: 0.1
+                    }),
+                    chrome: new THREE.MeshStandardMaterial({
+                        color: 0xcccccc,
+                        metalness: 0.95,
+                        roughness: 0.05
+                    }),
+                    blackRubber: new THREE.MeshStandardMaterial({
+                        color: 0x1a1a1a,
+                        roughness: 0.95
+                    }),
+                    redPad: new THREE.MeshStandardMaterial({
+                        color: 0xcc0000,
+                        roughness: 0.8
+                    }),
+                    herringbone: new THREE.MeshStandardMaterial({
+                        map: this.textures.herringbone,
+                        metalness: 0,
+                        roughness: 0.75
+                    }),
+                    velvetDeep: new THREE.MeshStandardMaterial({
+                        map: this.textures.velvet,
+                        roughness: 0.98
+                    }),
+                    wainscot: new THREE.MeshStandardMaterial({
+                        map: this.textures.wainscot,
+                        roughness: 0.88
+                    })
+                };
+            }
+
+            createExterior() {
+                var m = this.createMaterials();
+                var villa = new THREE.Group();
+                this.exteriorWalls = new THREE.Group();
+                this.box(villa, [35, 0.8, 26], [0, 0.4, 0], m.concrete, true, true);
+                this.box(this.exteriorWalls, [11, 5.5, 26], [-11, 2.75, 0], m.glass, true);
+                this.box(this.exteriorWalls, [16, 6.8, 26], [0, 3.4, 0], m.glass, true);
+                this.box(this.exteriorWalls, [11, 5.5, 26], [11, 2.75, 0], m.plaster, true);
+                this.box(this.exteriorWalls, [14, 4.5, 26], [0, 8.5, 0], m.glass, true);
+                this.box(this.exteriorWalls, [11, 4.5, 26], [11, 8.5, 0], m.plaster, true);
+                this.box(villa, [35, 0.6, 26], [0, 5.8, 0], m.concrete, true);
+                this.box(villa, [11.5, 0.6, 26], [-12, 10.8, 0], m.roof, true);
+                this.box(villa, [12, 0.6, 26], [0, 10.8, 0], m.roof, true);
+                this.box(villa, [11.5, 0.6, 26], [12, 10.8, 0], m.roof, true);
+                this.box(this.exteriorWalls, [1.6, 2.8, 0.1], [0, 1.4, 13.1], m.doorFrame, true);
+                this.sphere(this.exteriorWalls, 0.08, [0.7, 1.3, 13.2], m.doorHandle);
+                var stepM = new THREE.MeshStandardMaterial({
+                    color: 0x8b8680,
+                    roughness: 0.8
+                });
+                for (var i = 1; i <= 3; i++) this.box(this.exteriorWalls, [3, 0.3, 0.8], [0, 0.15 + (i * 0.3), 12.2 - (i * 0.8)], stepM, true);
+                this.box(this.exteriorWalls, [4, 0.4, 2], [0, 4.5, 12.5], new THREE.MeshStandardMaterial({
+                    color: 0x2c2c2c,
+                    roughness: 0.6,
+                    metalness: 0.2
+                }), true);
+                villa.add(this.exteriorWalls);
+                this.scene.add(villa);
+            }
+
+            createSwimmingPool() {
+                var G = new THREE.Group();
+                var PX = 0,
+                    PZ = 32,
+                    PW = 20,
+                    PD = 14,
+                    PDEPTH = 1.5;
+                var concreteMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.concrete,
+                    color: 0xb8b0a8,
+                    roughness: 0.90,
+                    metalness: 0.03
+                });
+                this.box(G, [100, 0.22, 88], [PX, 0.01, 10], concreteMat, false, true);
+                var jointMat = new THREE.MeshStandardMaterial({
+                    color: 0x888078,
+                    roughness: 0.98
+                });
+                for (var jh = 0; jh < 9; jh++) this.box(G, [100, 0.23, 0.05], [PX, 0.02, -32 + jh * 10], jointMat);
+                for (var jv = 0; jv < 11; jv++) this.box(G, [0.05, 0.23, 88], [PX - 50 + jv * 10, 0.02, 10], jointMat);
+                var deckMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.pool_deck,
+                    color: 0xd8cfc0,
+                    roughness: 0.72,
+                    metalness: 0.03
+                });
+                this.box(G, [PW + 12, 0.16, PD + 12], [PX, 0.20, PZ], deckMat, false, true);
+                var groutMat = new THREE.MeshStandardMaterial({
+                    color: 0xada49a,
+                    roughness: 0.95
+                });
+                for (var gi = 0; gi < 6; gi++) {
+                    this.box(G, [PW + 12, 0.17, 0.04], [PX, 0.21, PZ - PD / 2 - 5 + gi * ((PD + 10) / 5)], groutMat);
+                    this.box(G, [0.04, 0.17, PD + 12], [PX - PW / 2 - 5 + gi * ((PW + 10) / 5), 0.21, PZ], groutMat);
+                }
+                var tileMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.pool_tile,
+                    color: 0x5ec8e0,
+                    roughness: 0.18,
+                    metalness: 0.22
+                });
+                var tileBottomMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.pool_tile,
+                    color: 0x3aaec8,
+                    roughness: 0.24,
+                    metalness: 0.18
+                });
+                this.box(G, [PW - 0.3, 0.2, PD - 0.3], [PX, -PDEPTH + 0.1, PZ], tileBottomMat, false, true);
+                this.box(G, [PW, PDEPTH, 0.18], [PX, -PDEPTH / 2, PZ + PD / 2], tileMat);
+                this.box(G, [PW, PDEPTH, 0.18], [PX, -PDEPTH / 2, PZ - PD / 2], tileMat);
+                this.box(G, [0.18, PDEPTH, PD], [PX - PW / 2, -PDEPTH / 2, PZ], tileMat);
+                this.box(G, [0.18, PDEPTH, PD], [PX + PW / 2, -PDEPTH / 2, PZ], tileMat);
+                var shellMat = new THREE.MeshStandardMaterial({
+                    color: 0xb8a898,
+                    roughness: 0.85
+                });
+                this.box(G, [PW + 0.5, PDEPTH, 0.25], [PX, -PDEPTH / 2, PZ + PD / 2 + 0.12], shellMat);
+                this.box(G, [PW + 0.5, PDEPTH, 0.25], [PX, -PDEPTH / 2, PZ - PD / 2 - 0.12], shellMat);
+                this.box(G, [0.25, PDEPTH, PD + 0.5], [PX - PW / 2 - 0.12, -PDEPTH / 2, PZ], shellMat);
+                this.box(G, [0.25, PDEPTH, PD + 0.5], [PX + PW / 2 + 0.12, -PDEPTH / 2, PZ], shellMat);
+                var copingMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.marble,
+                    color: 0xf0ece4,
+                    roughness: 0.28,
+                    metalness: 0.10
+                });
+                var cw = 0.42,
+                    ch = 0.16;
+                this.box(G, [PW + cw * 2, ch, cw], [PX, 0.27, PZ + PD / 2 + cw / 2], copingMat, true);
+                this.box(G, [PW + cw * 2, ch, cw], [PX, 0.27, PZ - PD / 2 - cw / 2], copingMat, true);
+                this.box(G, [cw, ch, PD], [PX - PW / 2 - cw / 2, 0.27, PZ], copingMat, true);
+                this.box(G, [cw, ch, PD], [PX + PW / 2 + cw / 2, 0.27, PZ], copingMat, true);
+                var waterGeo = new THREE.PlaneGeometry(PW - 0.22, PD - 0.22, 48, 48);
+                var waterMat = new THREE.MeshPhysicalMaterial({
+                    map: this.textures.water_normal,
+                    color: 0x0077cc,
+                    emissive: 0x003366,
+                    emissiveIntensity: 0.18,
+                    metalness: 0.05,
+                    roughness: 0.0,
+                    transparent: true,
+                    opacity: 0.96,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.0,
+                    reflectivity: 1.0,
+                    side: THREE.FrontSide,
+                    depthWrite: false
+                });
+                this.poolWaterMesh = new THREE.Mesh(waterGeo, waterMat);
+                this.poolWaterMesh.rotation.x = -Math.PI / 2;
+                this.poolWaterMesh.position.set(PX, 0.22, PZ);
+                this.poolWaterMesh.receiveShadow = true;
+                G.add(this.poolWaterMesh);
+                this._waterOrigPos = new Float32Array(waterGeo.attributes.position.array);
+                var waterFillMat = new THREE.MeshStandardMaterial({
+                    color: 0x004d99,
+                    emissive: 0x002244,
+                    emissiveIntensity: 0.25,
+                    roughness: 0.0,
+                    metalness: 0.05,
+                    transparent: true,
+                    opacity: 0.88,
+                    side: THREE.FrontSide
+                });
+                var waterFill = new THREE.Mesh(new THREE.BoxGeometry(PW - 0.25, PDEPTH, PD - 0.25), waterFillMat);
+                waterFill.position.set(PX, -PDEPTH / 2 + 0.1, PZ);
+                G.add(waterFill);
+                var infMat = new THREE.MeshStandardMaterial({
+                    color: 0x1589a0,
+                    roughness: 0.18,
+                    metalness: 0.28
+                });
+                this.box(G, [PW, 0.06, 0.10], [PX, 0.035, PZ - PD / 2 - 0.04], infMat);
+                var ovGeo = new THREE.PlaneGeometry(PW, 0.35);
+                var ovMat = new THREE.MeshPhysicalMaterial({
+                    color: 0x00aacc,
+                    transparent: true,
+                    opacity: 0.52,
+                    roughness: 0.04,
+                    transmission: 0.85
+                });
+                var ov = new THREE.Mesh(ovGeo, ovMat);
+                ov.rotation.x = -Math.PI / 2;
+                ov.position.set(PX, 0.025, PZ - PD / 2 - 0.18);
+                G.add(ov);
+                var stepMat = new THREE.MeshStandardMaterial({
+                    color: 0x42b8d8,
+                    roughness: 0.38
+                });
+                for (var si = 0; si < 3; si++) this.box(G, [3.8, 0.46, 0.52], [PX - 7.5, -si * 0.46 - 0.23, PZ + PD / 2 - 0.28 - si * 0.52], stepMat, true);
+                var railMat = new THREE.MeshStandardMaterial({
+                    color: 0xd4c8b2,
+                    metalness: 0.7,
+                    roughness: 0.22
+                });
+                this.cyl(G, 0.035, 0.035, 1.1, [PX - 6.0, 0.55, PZ + PD / 2 - 0.2], railMat, 10);
+                this.cyl(G, 0.035, 0.035, 1.1, [PX - 9.0, 0.55, PZ + PD / 2 - 0.2], railMat, 10);
+                this.box(G, [3.2, 0.04, 0.04], [PX - 7.5, 1.12, PZ + PD / 2 - 0.2], railMat);
+                var glowMat = new THREE.MeshStandardMaterial({
+                    color: 0x00e5ff,
+                    emissive: 0x00c8e8,
+                    emissiveIntensity: 1.1
+                });
+                this.box(G, [0.09, 0.12, PD - 0.5], [PX - PW / 2 + 0.13, -0.62, PZ], glowMat);
+                this.box(G, [0.09, 0.12, PD - 0.5], [PX + PW / 2 - 0.13, -0.62, PZ], glowMat);
+                this.box(G, [PW - 0.5, 0.1, 0.09], [PX, -0.62, PZ - PD / 2 + 0.12], glowMat);
+                var spotMat = new THREE.MeshStandardMaterial({
+                    color: 0x00ffff,
+                    emissive: 0x00eeee,
+                    emissiveIntensity: 1.5
+                });
+                [-PW / 2 + 0.6, 0, PW / 2 - 0.6].forEach(function(gx) {
+                    this.sphere(G, 0.13, [PX + gx, -PDEPTH + 0.18, PZ], spotMat);
+                    var gl = new THREE.PointLight(0x00ccff, 1.0, 7);
+                    gl.position.set(PX + gx, -PDEPTH + 0.25, PZ);
+                    G.add(gl);
+                }.bind(this));
+                var mosaicGeo = new THREE.CircleGeometry(2.2, 36);
+                var mosaic = new THREE.Mesh(mosaicGeo, new THREE.MeshStandardMaterial({
+                    color: 0x1565c0,
+                    roughness: 0.38
+                }));
+                mosaic.rotation.x = -Math.PI / 2;
+                mosaic.position.set(PX, -PDEPTH + 0.04, PZ);
+                G.add(mosaic);
+                for (var mi = 0; mi < 8; mi++) {
+                    var mang = (mi / 8) * Math.PI * 2;
+                    var starGeo = new THREE.PlaneGeometry(0.22, 1.7);
+                    var star = new THREE.Mesh(starGeo, new THREE.MeshStandardMaterial({
+                        color: 0x90caf9,
+                        roughness: 0.38
+                    }));
+                    star.rotation.x = -Math.PI / 2;
+                    star.rotation.z = mang;
+                    star.position.set(PX + Math.cos(mang) * 0.9, -PDEPTH + 0.05, PZ + Math.sin(mang) * 0.9);
+                    G.add(star);
+                }
+                var laneMat = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.45
+                });
+                for (var li = 0; li < 3; li++) {
+                    var lx = PX - PW / 2 + (li + 1) * (PW / 4);
+                    var lineGeo = new THREE.PlaneGeometry(0.13, PD - 0.6);
+                    var lineMesh = new THREE.Mesh(lineGeo, laneMat);
+                    lineMesh.rotation.x = -Math.PI / 2;
+                    lineMesh.position.set(lx, -PDEPTH + 0.03, PZ);
+                    G.add(lineMesh);
+                }
+                var loungers = [{
+                    x: PX - PW / 2 - 2.4,
+                    z: PZ - 3.2,
+                    ry: 0.08
+                }, {
+                    x: PX - PW / 2 - 2.4,
+                    z: PZ + 3.2,
+                    ry: -0.08
+                }, {
+                    x: PX + PW / 2 + 2.4,
+                    z: PZ - 3.2,
+                    ry: Math.PI + 0.08
+                }, {
+                    x: PX + PW / 2 + 2.4,
+                    z: PZ + 3.2,
+                    ry: Math.PI - 0.08
+                }];
+                loungers.forEach(function(lp) {
+                    this.createSunLounger(G, lp.x, lp.z, lp.ry);
+                }.bind(this));
+                this.createParasol(G, PX - PW / 2 - 2.4, PZ);
+                this.createParasol(G, PX + PW / 2 + 2.4, PZ);
+                this.createPoolBar(G, PX + PW / 2 - 1.5, PZ + PD / 2 + 3.8);
+                [
+                    [PX - PW / 2 - 5.2, PZ - PD / 2 - 2.8],
+                    [PX + PW / 2 + 5.2, PZ - PD / 2 - 2.8],
+                    [PX - PW / 2 - 5.2, PZ + PD / 2 + 2.8],
+                    [PX + PW / 2 + 5.2, PZ + PD / 2 + 2.8],
+                    [PX - 7, PZ + PD / 2 + 3.0],
+                    [PX + 7, PZ + PD / 2 + 3.0],
+                    [PX - PW / 2 - 5.2, PZ],
+                    [PX + PW / 2 + 5.2, PZ]
+                ].forEach(function(p) {
+                    this.createLargePot(G, p[0], p[1]);
+                }.bind(this));
+                [
+                    [PX - PW / 2 - 0.4, PZ - PD / 2 - 0.4],
+                    [PX + PW / 2 + 0.4, PZ - PD / 2 - 0.4],
+                    [PX - PW / 2 - 0.4, PZ + PD / 2 + 0.4],
+                    [PX + PW / 2 + 0.4, PZ + PD / 2 + 0.4],
+                    [PX, PZ - PD / 2 - 0.4],
+                    [PX, PZ + PD / 2 + 0.4],
+                    [PX - PW / 4, PZ - PD / 2 - 0.4],
+                    [PX + PW / 4, PZ - PD / 2 - 0.4]
+                ].forEach(function(bp) {
+                    this.createBollardLight(G, bp[0], bp[1]);
+                }.bind(this));
+                this.createFountainJet(G, PX - 6.5, PZ - 5);
+                this.createFountainJet(G, PX + 6.5, PZ - 5);
+                var pathMat = new THREE.MeshStandardMaterial({
+                    color: 0xd4c4a8,
+                    roughness: 0.78
+                });
+                this.box(G, [4, 0.14, 5.5], [PX, 0.07, 15.5], pathMat, false, true);
+                for (var pi = 0; pi < 4; pi++) {
+                    this.box(G, [1.6, 0.1, 0.75], [PX - 0.9, 0.05, 17.8 + pi * 1.3], new THREE.MeshStandardMaterial({
+                        color: 0xd0bfa0,
+                        roughness: 0.88
+                    }), false, true);
+                    this.box(G, [1.6, 0.1, 0.75], [PX + 0.9, 0.05, 17.8 + pi * 1.3], new THREE.MeshStandardMaterial({
+                        color: 0xd0bfa0,
+                        roughness: 0.88
+                    }), false, true);
+                }
+                this.scene.add(G);
+                this.createPerimeterWall();
+            }
+
+            createPerimeterWall() {
+                var W = new THREE.Group();
+                var WX = 50.5,
+                    ZN = -34.5,
+                    ZS = 54.5,
+                    WH = 3.8,
+                    WT = 0.55,
+                    WY = WH / 2 + 0.22;
+                var wallMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.wall_stone,
+                    color: 0xd4ccc0,
+                    roughness: 0.82,
+                    metalness: 0.04
+                });
+                var capMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.marble,
+                    color: 0xe8e2d8,
+                    roughness: 0.30,
+                    metalness: 0.08
+                });
+                var pillarMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.wall_stone,
+                    color: 0xc8bfb2,
+                    roughness: 0.75,
+                    metalness: 0.06
+                });
+                var slab_w = WX * 2,
+                    slab_d = ZS - ZN;
+                this.box(W, [slab_w, WH, WT], [0, WY, ZS], wallMat, true);
+                this.box(W, [slab_w, WH, WT], [0, WY, ZN], wallMat, true);
+                this.box(W, [WT, WH, slab_d], [-WX, WY, (ZN + ZS) / 2], wallMat, true);
+                this.box(W, [WT, WH, slab_d], [WX, WY, (ZN + ZS) / 2], wallMat, true);
+                var capH = 0.18,
+                    capOvh = 0.08;
+                this.box(W, [slab_w + WT * 2, capH, WT + capOvh * 2], [0, WH + 0.22 + capH / 2, ZS], capMat, true);
+                this.box(W, [slab_w + WT * 2, capH, WT + capOvh * 2], [0, WH + 0.22 + capH / 2, ZN], capMat, true);
+                this.box(W, [WT + capOvh * 2, capH, slab_d + WT * 2], [-WX, WH + 0.22 + capH / 2, (ZN + ZS) / 2], capMat, true);
+                this.box(W, [WT + capOvh * 2, capH, slab_d + WT * 2], [WX, WH + 0.22 + capH / 2, (ZN + ZS) / 2], capMat, true);
+                var PW2 = 1.0,
+                    PH = WH + 0.55,
+                    PD2 = 1.0,
+                    pillarY = PH / 2 + 0.22;
+                var cornerPillars = [
+                    [-WX, ZS],
+                    [WX, ZS],
+                    [-WX, ZN],
+                    [WX, ZN]
+                ];
+                cornerPillars.forEach(function(p) {
+                    this.box(W, [PW2, PH, PD2], [p[0], pillarY, p[1]], pillarMat, true);
+                    this.sphere(W, 0.32, [p[0], PH + 0.22 + 0.32, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0xe0d8cc,
+                        roughness: 0.28,
+                        metalness: 0.12
+                    }));
+                    this.box(W, [PW2 + 0.14, 0.18, PD2 + 0.14], [p[0], 0.31, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0xc8c0b4,
+                        roughness: 0.6
+                    }));
+                }.bind(this));
+                [-28, 0, 28].forEach(function(px) {
+                    this.box(W, [PW2, PH, PD2], [px, pillarY, ZS], pillarMat, true);
+                    this.sphere(W, 0.28, [px, PH + 0.22 + 0.28, ZS], new THREE.MeshStandardMaterial({
+                        color: 0xe0d8cc,
+                        roughness: 0.28,
+                        metalness: 0.12
+                    }));
+                    this.box(W, [PW2, PH, PD2], [px, pillarY, ZN], pillarMat, true);
+                    this.sphere(W, 0.28, [px, PH + 0.22 + 0.28, ZN], new THREE.MeshStandardMaterial({
+                        color: 0xe0d8cc,
+                        roughness: 0.28,
+                        metalness: 0.12
+                    }));
+                }.bind(this));
+                [-22, -7, 8, 23, 38].forEach(function(pz) {
+                    this.box(W, [PW2, PH, PD2], [-WX, pillarY, pz], pillarMat, true);
+                    this.sphere(W, 0.28, [-WX, PH + 0.22 + 0.28, pz], new THREE.MeshStandardMaterial({
+                        color: 0xe0d8cc,
+                        roughness: 0.28,
+                        metalness: 0.12
+                    }));
+                    this.box(W, [PW2, PH, PD2], [WX, pillarY, pz], pillarMat, true);
+                    this.sphere(W, 0.28, [WX, PH + 0.22 + 0.28, pz], new THREE.MeshStandardMaterial({
+                        color: 0xe0d8cc,
+                        roughness: 0.28,
+                        metalness: 0.12
+                    }));
+                }.bind(this));
+                W.children = W.children.filter(function(c) {
+                    return !(Math.abs(c.position.z - ZS) < 0.1 && Math.abs(c.position.y - WY) < 0.1 && c.geometry && Math.abs(c.geometry.parameters.width - slab_w) < 0.5);
+                });
+                W.children = W.children.filter(function(c) {
+                    return !(Math.abs(c.position.z - ZS) < 0.1 && Math.abs(c.position.y - (WH + 0.22 + capH / 2)) < 0.1 && c.geometry && Math.abs(c.geometry.parameters.width - (slab_w + WT * 2)) < 0.5);
+                });
+                var gateW = 7.0,
+                    sideW = (slab_w - gateW) / 2;
+                this.box(W, [sideW, WH, WT], [-WX + sideW / 2, WY, ZS], wallMat, true);
+                this.box(W, [sideW + capOvh * 2, capH, WT + capOvh * 2], [-WX + sideW / 2, WH + 0.22 + capH / 2, ZS], capMat);
+                this.box(W, [sideW, WH, WT], [WX - sideW / 2, WY, ZS], wallMat, true);
+                this.box(W, [sideW + capOvh * 2, capH, WT + capOvh * 2], [WX - sideW / 2, WH + 0.22 + capH / 2, ZS], capMat);
+                var gPW = 1.3,
+                    gPH = WH + 1.0;
+                [-(gateW / 2), (gateW / 2)].forEach(function(gx) {
+                    this.box(W, [gPW, gPH, gPW], [gx, gPH / 2 + 0.22, ZS], pillarMat, true);
+                    this.sphere(W, 0.44, [gx, gPH + 0.22 + 0.44, ZS], new THREE.MeshStandardMaterial({
+                        color: 0xf0e8dc,
+                        roughness: 0.22,
+                        metalness: 0.14
+                    }));
+                    this.box(W, [gPW + 0.2, 0.22, gPW + 0.2], [gx, 0.33, ZS], new THREE.MeshStandardMaterial({
+                        color: 0xc0b8ac,
+                        roughness: 0.55
+                    }));
+                }.bind(this));
+                this.box(W, [gateW + gPW * 2, 0.28, WT + 0.1], [0, gPH + 0.22 + 0.28 / 2, ZS], new THREE.MeshStandardMaterial({
+                    color: 0xd4c8bc,
+                    roughness: 0.55
+                }));
+                cornerPillars.concat([
+                    [-28, ZS],
+                    [0, ZS],
+                    [28, ZS],
+                    [-28, ZN],
+                    [0, ZN],
+                    [28, ZN]
+                ]).forEach(function(p) {
+                    this.box(W, [0.18, 0.22, 0.18], [p[0], WH - 0.5, p[1] + WT / 2 + 0.12], new THREE.MeshStandardMaterial({
+                        color: 0xffe8a0,
+                        emissive: 0xffd700,
+                        emissiveIntensity: 0.55
+                    }));
+                    var wl = new THREE.PointLight(0xffd4a3, 0.4, 8);
+                    wl.position.set(p[0], WH - 0.3, p[1] + WT / 2 + 0.2);
+                    W.add(wl);
+                }.bind(this));
+                this.scene.add(W);
+            }
+
+            createSunLounger(G, x, z, ry) {
+                var L = new THREE.Group();
+                var frameMat = new THREE.MeshStandardMaterial({
+                    color: 0xd4a843,
+                    metalness: 0.72,
+                    roughness: 0.18
+                });
+                var cushMat = new THREE.MeshStandardMaterial({
+                    color: 0xfaf6ed,
+                    roughness: 0.95
+                });
+                this.box(L, [0.76, 0.07, 2.05], [0, 0.3, 0], frameMat, true);
+                this.box(L, [0.68, 0.09, 1.85], [0, 0.36, 0.04], cushMat, true);
+                this.box(L, [0.68, 0.07, 0.52], [0, 0.43, -0.82], new THREE.MeshStandardMaterial({
+                    color: 0xfaf6ed,
+                    roughness: 0.95
+                }), true);
+                [
+                    [-0.32, -0.85],
+                    [-0.32, 0.85],
+                    [0.32, -0.85],
+                    [0.32, 0.85]
+                ].forEach(function(p) {
+                    this.box(L, [0.055, 0.28, 0.055], [p[0], 0.14, p[1]], frameMat);
+                }.bind(this));
+                this.box(L, [0.04, 0.04, 2.12], [-0.32, 0.29, 0], frameMat);
+                this.box(L, [0.04, 0.04, 2.12], [0.32, 0.29, 0], frameMat);
+                this.box(L, [0.48, 0.03, 0.65], [0.42, 0.32, 0.28], new THREE.MeshStandardMaterial({
+                    color: 0x1565c0,
+                    roughness: 0.95
+                }));
+                this.cyl(L, 0.18, 0.18, 0.04, [0.7, 0.5, 0], new THREE.MeshStandardMaterial({
+                    color: 0x5d4037,
+                    roughness: 0.7
+                }), 12);
+                this.cyl(L, 0.04, 0.04, 0.44, [0.7, 0.28, 0], new THREE.MeshStandardMaterial({
+                    color: 0xc0a060,
+                    metalness: 0.82
+                }), 8);
+                this.cyl(L, 0.04, 0.055, 0.18, [0.7, 0.55, 0], new THREE.MeshStandardMaterial({
+                    color: 0xff6b35,
+                    transparent: true,
+                    opacity: 0.8,
+                    roughness: 0.08
+                }), 10);
+                L.position.set(x, 0.34, z);
+                L.rotation.y = ry;
+                G.add(L);
+            }
+
+            createParasol(G, x, z) {
+                var P = new THREE.Group();
+                var poleMat = new THREE.MeshStandardMaterial({
+                    color: 0xd4a843,
+                    metalness: 0.78,
+                    roughness: 0.16
+                });
+                this.cyl(P, 0.042, 0.042, 2.9, [0, 1.45, 0], poleMat, 12);
+                var segCount = 12;
+                for (var si = 0; si < segCount; si++) {
+                    var ang1 = (si / segCount) * Math.PI * 2,
+                        ang2 = ((si + 1) / segCount) * Math.PI * 2;
+                    var col = si % 2 === 0 ? 0xf4e4b0 : 0xffffff;
+                    var segGeo = new THREE.BufferGeometry();
+                    var r = 2.25;
+                    var verts = new Float32Array([0, 2.9, 0, Math.cos(ang1) * r, 2.52, Math.sin(ang1) * r, Math.cos(ang2) * r, 2.52, Math.sin(ang2) * r]);
+                    segGeo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+                    segGeo.computeVertexNormals();
+                    var seg = new THREE.Mesh(segGeo, new THREE.MeshStandardMaterial({
+                        color: col,
+                        roughness: 0.88,
+                        side: THREE.DoubleSide
+                    }));
+                    seg.castShadow = true;
+                    P.add(seg);
+                }
+                for (var fi = 0; fi < 16; fi++) {
+                    var fa = (fi / 16) * Math.PI * 2;
+                    this.box(P, [0.02, 0.22, 0.02], [Math.cos(fa) * 2.2, 2.38, Math.sin(fa) * 2.2], new THREE.MeshStandardMaterial({
+                        color: 0xe8d080,
+                        roughness: 0.9
+                    }));
+                }
+                this.sphere(P, 0.06, [0, 2.94, 0], new THREE.MeshStandardMaterial({
+                    color: 0xd4a843,
+                    metalness: 0.8
+                }));
+                this.cyl(P, 0.3, 0.3, 0.1, [0, 0.05, 0], new THREE.MeshStandardMaterial({
+                    color: 0x888888,
+                    metalness: 0.65,
+                    roughness: 0.38
+                }), 16);
+                P.position.set(x, 0, z);
+                G.add(P);
+            }
+
+            createPoolBar(G, x, z) {
+                var B = new THREE.Group();
+                var barBodyMat = new THREE.MeshStandardMaterial({
+                    color: 0x5d4037,
+                    roughness: 0.75
+                });
+                var barTopMat = new THREE.MeshStandardMaterial({
+                    color: 0x3e2723,
+                    roughness: 0.6
+                });
+                this.box(B, [3.0, 1.15, 0.8], [0, 0.58, 0], barBodyMat, true);
+                this.box(B, [3.05, 0.07, 0.88], [0, 1.19, 0], barTopMat, false, true);
+                for (var si = 0; si < 3; si++) {
+                    var sx = -0.8 + si * 0.8;
+                    this.cyl(B, 0.25, 0.25, 0.06, [sx, 0.74, 0.75], new THREE.MeshStandardMaterial({
+                        color: 0xd4a843,
+                        metalness: 0.62,
+                        roughness: 0.28
+                    }), 16);
+                    this.cyl(B, 0.03, 0.03, 0.72, [sx, 0.37, 0.75], new THREE.MeshStandardMaterial({
+                        color: 0xb0a090,
+                        metalness: 0.78
+                    }), 8);
+                    this.cyl(B, 0.18, 0.18, 0.04, [sx, 0.03, 0.75], new THREE.MeshStandardMaterial({
+                        color: 0xb0a090,
+                        metalness: 0.78
+                    }), 12);
+                }
+                [
+                    [0xff4444, -0.72],
+                    [0x44ff88, 0],
+                    [0xffaa00, 0.72]
+                ].forEach(function(d) {
+                    this.cyl(B, 0.042, 0.058, 0.22, [d[1], 1.25, -0.08], new THREE.MeshStandardMaterial({
+                        color: d[0],
+                        transparent: true,
+                        opacity: 0.78,
+                        roughness: 0.08
+                    }), 12);
+                    this.cyl(B, 0.006, 0.006, 0.28, [d[1] + 0.025, 1.38, -0.08], new THREE.MeshStandardMaterial({
+                        color: 0xff69b4
+                    }), 6);
+                }.bind(this));
+                var shadeMat = new THREE.MeshStandardMaterial({
+                    color: 0x8d6e63,
+                    roughness: 0.85
+                });
+                this.box(B, [3.4, 0.06, 1.3], [0, 2.65, 0], shadeMat);
+                this.cyl(B, 0.042, 0.042, 2.65, [-1.4, 1.325, -0.28], new THREE.MeshStandardMaterial({
+                    color: 0x6d4c41,
+                    roughness: 0.72
+                }), 8);
+                this.cyl(B, 0.042, 0.042, 2.65, [1.4, 1.325, -0.28], new THREE.MeshStandardMaterial({
+                    color: 0x6d4c41,
+                    roughness: 0.72
+                }), 8);
+                for (var bl = 0; bl < 6; bl++) {
+                    var bx = -1.2 + bl * 0.48;
+                    this.sphere(B, 0.04, [bx, 2.42, 0], new THREE.MeshStandardMaterial({
+                        color: 0xffee58,
+                        emissive: 0xffdd00,
+                        emissiveIntensity: 1.2
+                    }));
+                }
+                var barLight = new THREE.PointLight(0xffd700, 0.6, 5);
+                barLight.position.set(x, 1.8, z);
+                G.add(barLight);
+                B.position.set(x, 0, z);
+                G.add(B);
+            }
+
+            createBollardLight(G, x, z) {
+                var poleMat = new THREE.MeshStandardMaterial({
+                    color: 0xb0b0b0,
+                    metalness: 0.72,
+                    roughness: 0.28
+                });
+                this.cyl(G, 0.05, 0.065, 0.72, [x, 0.36, z], poleMat, 10);
+                this.cyl(G, 0.09, 0.09, 0.055, [x, 0.75, z], new THREE.MeshStandardMaterial({
+                    color: 0xffe8a0,
+                    emissive: 0xffd700,
+                    emissiveIntensity: 0.95
+                }), 12);
+                this.cyl(G, 0.065, 0.065, 0.035, [x, 0.02, z], poleMat, 10);
+                var bl = new THREE.PointLight(0xffd700, 0.55, 4.5);
+                bl.position.set(x, 0.88, z);
+                G.add(bl);
+            }
+
+            createLargePot(G, x, z) {
+                this.cyl(G, 0.38, 0.28, 0.68, [x, 0.34, z], new THREE.MeshStandardMaterial({
+                    color: 0x8d6e63,
+                    roughness: 0.8
+                }), 14);
+                this.cyl(G, 0.36, 0.36, 0.04, [x, 0.7, z], new THREE.MeshStandardMaterial({
+                    color: 0x3e2723,
+                    roughness: 0.95
+                }), 14);
+                this.cyl(G, 0.05, 0.075, 1.15, [x, 1.26, z], new THREE.MeshStandardMaterial({
+                    color: 0x5d4037,
+                    roughness: 0.85
+                }), 8);
+                for (var li = 0; li < 7; li++) {
+                    var lang = (li / 7) * Math.PI * 2;
+                    var lx2 = Math.cos(lang) * 0.58,
+                        lz2 = Math.sin(lang) * 0.58;
+                    var leafGeo = new THREE.PlaneGeometry(0.24, 0.82);
+                    var leaf = new THREE.Mesh(leafGeo, new THREE.MeshStandardMaterial({
+                        color: li % 2 === 0 ? 0x2e7d32 : 0x388e3c,
+                        roughness: 0.9,
+                        side: THREE.DoubleSide
+                    }));
+                    leaf.position.set(x + lx2, 1.82, z + lz2);
+                    leaf.rotation.z = -Math.PI * 0.28;
+                    leaf.rotation.y = lang;
+                    G.add(leaf);
+                }
+                this.sphere(G, 0.13, [x, 1.90, z], new THREE.MeshStandardMaterial({
+                    color: 0xf50057,
+                    roughness: 0.65
+                }));
+            }
+
+            createFountainJet(G, x, z) {
+                this.cyl(G, 0.24, 0.30, 0.13, [x, 0.065, z], new THREE.MeshStandardMaterial({
+                    color: 0xb0bec5,
+                    metalness: 0.62,
+                    roughness: 0.3
+                }), 14);
+                this.cyl(G, 0.028, 0.038, 0.2, [x, 0.23, z], new THREE.MeshStandardMaterial({
+                    color: 0x90a4ae,
+                    metalness: 0.82
+                }), 8);
+                for (var fi = 0; fi < 7; fi++) {
+                    var ft = fi / 6,
+                        fy = 0.35 + Math.sin(ft * Math.PI) * 0.72,
+                        fzOff = ft * 0.75,
+                        fSize = 0.055 * (1 - ft * 0.45);
+                    this.sphere(G, fSize, [x, fy, z + fzOff], new THREE.MeshPhysicalMaterial({
+                        color: 0x80d8ff,
+                        transparent: true,
+                        opacity: 0.6 - ft * 0.2,
+                        roughness: 0.04,
+                        transmission: 0.55
+                    }));
+                }
+                var splashGeo = new THREE.RingGeometry(0.04, 0.25, 18);
+                var splash = new THREE.Mesh(splashGeo, new THREE.MeshStandardMaterial({
+                    color: 0x80d8ff,
+                    transparent: true,
+                    opacity: 0.45,
+                    roughness: 0.04,
+                    side: THREE.DoubleSide
+                }));
+                splash.rotation.x = -Math.PI / 2;
+                splash.position.set(x, 0.085, z + 0.75);
+                G.add(splash);
+            }
+
+            createInterior() {
+                var m = this.createMaterials(),
+                    g = new THREE.Group();
+                var floors = [{
+                    sz: [11, 26],
+                    ps: [-11, 0.1, 0],
+                    mt: m.woodFloor
+                }, {
+                    sz: [14, 26],
+                    ps: [0, 0.1, 0],
+                    mt: m.marble
+                }, {
+                    sz: [11, 26],
+                    ps: [11, 0.1, 0],
+                    mt: m.herringbone
+                }, {
+                    sz: [14, 26],
+                    ps: [0, 6.1, 0],
+                    mt: m.rubberFloor
+                }, {
+                    sz: [11, 26],
+                    ps: [11, 6.12, 0],
+                    mt: m.herringbone
+                }, {
+                    sz: [11, 26],
+                    ps: [-11, 6.1, 0],
+                    mt: m.woodFloor
+                }];
+                floors.forEach(function(f) {
+                    var fm = new THREE.Mesh(new THREE.PlaneGeometry(f.sz[0], f.sz[1]), f.mt);
+                    fm.rotation.x = -Math.PI / 2;
+                    fm.position.set(f.ps[0], f.ps[1], f.ps[2]);
+                    fm.receiveShadow = true;
+                    g.add(fm);
+                });
+                this.buildLivingRoom(g, m);
+                this.buildKitchen(g, m);
+                this.buildBedroom(g, m);
+                this.buildGym(g, m);
+                this.buildUpperBedroom(g, m);
+                this.scene.add(g);
+            }
+
+            buildLivingRoom(g, m) {
+                var rug = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 14.0), new THREE.MeshStandardMaterial({
+                    color: 0x7b6b5a,
+                    roughness: 0.9
+                }));
+                rug.rotation.x = -Math.PI / 2;
+                rug.position.set(-11, 0.06, 0);
+                g.add(rug);
+                this.box(g, [5.0, 0.72, 1.3], [-11, 0.72, -10.5], m.fabricGray, true);
+                this.box(g, [5.0, 0.55, 0.18], [-11, 1.20, -11.15], m.fabricGray);
+                this.box(g, [0.18, 0.55, 1.3], [-13.8, 1.20, -10.5], m.fabricGray);
+                this.box(g, [1.3, 0.72, 3.0], [-8.2, 0.72, -8.8], m.fabricGray, true);
+                this.box(g, [0.18, 0.55, 3.0], [-7.62, 1.20, -8.8], m.fabricGray);
+                [0xfb8c9e, 0xc2547a, 0xff9d7e, 0xf06292, 0xec407a].forEach(function(c, i) {
+                    this.box(g, [0.8, 0.16, 0.6], [-13.0 + i * 1.0, 1.5, -10.5], new THREE.MeshStandardMaterial({
+                        color: c,
+                        roughness: 0.85
+                    }));
+                }.bind(this));
+                this.box(g, [1.05, 0.62, 1.05], [-7.0, 0.62, -8.5], m.fabricBeige, true);
+                this.box(g, [1.05, 0.78, 0.20], [-7.0, 1.12, -9.0], m.fabricBeige);
+                this.box(g, [2.2, 0.07, 1.1], [-11, 0.52, -8.0], m.darkWood, true, true);
+                [
+                    [-12.1, -8.55],
+                    [-9.9, -8.55],
+                    [-12.1, -7.45],
+                    [-9.9, -7.45]
+                ].forEach(function(p) {
+                    this.cyl(g, 0.05, 0.05, 0.48, [p[0], 0.26, p[1]], m.darkWood, 8);
+                }.bind(this));
+                this.box(g, [4.2, 0.52, 0.45], [-11, 0.38, 11.5], m.darkWood, true);
+                this.box(g, [3.2, 1.65, 0.07], [-11, 2.05, 11.7], new THREE.MeshStandardMaterial({
+                    color: 0x101010
+                }), true);
+                this.box(g, [0.45, 2.8, 3.5], [-16.32, 1.4, 0], m.darkWood, true);
+                [0.45, 1.15, 1.85, 2.55].forEach(function(sh) {
+                    this.box(g, [0.38, 0.06, 3.4], [-16.30, sh, 0], m.darkWood);
+                }.bind(this));
+                [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xaa96da, 0xfcbad3, 0xa8edea, 0x6bcb77, 0xd4e09b, 0xf38181, 0x4a90d9, 0xe67e22].forEach(function(c, i) {
+                    this.box(g, [0.07, 0.36 + (i % 3) * 0.07, 0.22], [-16.12, 0.62 + Math.floor(i / 4) * 0.7, -1.4 + (i % 4) * 0.72], new THREE.MeshStandardMaterial({
+                        color: c,
+                        roughness: 0.8
+                    }));
+                }.bind(this));
+                [
+                    [-7.5, -11.0],
+                    [-14.5, -11.0],
+                    [-7.5, 11.0]
+                ].forEach(function(lp) {
+                    this.cyl(g, 0.12, 0.12, 0.04, [lp[0], 0.02, lp[1]], m.darkWood);
+                    this.cyl(g, 0.025, 0.025, 1.68, [lp[0], 0.86, lp[1]], m.darkWood);
+                    this.cyl(g, 0.19, 0.14, 0.28, [lp[0], 1.86, lp[1]], new THREE.MeshStandardMaterial({
+                        color: 0xfff8e7,
+                        emissive: 0xffa040,
+                        emissiveIntensity: 0.4
+                    }));
+                    var fl = new THREE.PointLight(0xffd4a3, 0.55, 8);
+                    fl.position.set(lp[0], 2.05, lp[1]);
+                    g.add(fl);
+                }.bind(this));
+                this.cyl(g, 0.32, 0.32, 0.1, [-11, 5.9, 0], new THREE.MeshStandardMaterial({
+                    color: 0xffe4b5,
+                    emissive: 0xffd700,
+                    emissiveIntensity: 0.55
+                }));
+                var lrCL = new THREE.PointLight(0xffd700, 1.0, 22);
+                lrCL.position.set(-11, 5.78, 0);
+                g.add(lrCL);
+                var lrCL2 = new THREE.PointLight(0xffd700, 0.7, 18);
+                lrCL2.position.set(-11, 5.78, -8);
+                g.add(lrCL2);
+                this.addPlant(g, [-15.8, 0.2, -12.0], [-15.8, 0.82, -12.0]);
+                this.addPlant(g, [-15.8, 0.2, 12.0], [-15.8, 0.82, 12.0]);
+                this.addPlant(g, [-7.0, 0.2, 11.5], [-7.0, 0.82, 11.5]);
+                [
+                    [-13.5, 0x4682b4],
+                    [-11, 0xe67e22],
+                    [-8.5, 0x27ae60]
+                ].forEach(function(wa) {
+                    this.box(g, [1.5, 1.05, 0.05], [wa[0], 2.8, -12.88], new THREE.MeshStandardMaterial({
+                        color: 0x6b4c2a
+                    }));
+                    this.box(g, [1.3, 0.85, 0.02], [wa[0], 2.8, -12.85], new THREE.MeshStandardMaterial({
+                        color: wa[1],
+                        roughness: 0.6
+                    }));
+                }.bind(this));
+            }
+
+            buildKitchen(g, m) {
+                this.box(g, [11.0, 0.98, 0.65], [0, 0.49, -12.0], new THREE.MeshStandardMaterial({
+                    color: 0x5a4a38,
+                    roughness: 0.7
+                }), true);
+                this.box(g, [11.0, 1.05, 0.55], [0, 3.55, -12.0], new THREE.MeshStandardMaterial({
+                    color: 0x4a3728,
+                    roughness: 0.7
+                }), true);
+                this.box(g, [11.0, 0.07, 0.70], [0, 1.04, -12.0], m.marble, false, true);
+                this.box(g, [0.82, 0.20, 0.52], [-2.5, 1.15, -11.9], new THREE.MeshStandardMaterial({
+                    color: 0xd0d0d0,
+                    metalness: 0.75,
+                    roughness: 0.1
+                }));
+                this.cyl(g, 0.035, 0.035, 0.32, [-2.5, 1.48, -11.88], new THREE.MeshStandardMaterial({
+                    color: 0xc0c0c0,
+                    metalness: 0.92
+                }));
+                this.box(g, [0.78, 0.08, 0.55], [1.5, 1.10, -11.88], new THREE.MeshStandardMaterial({
+                    color: 0x222222,
+                    metalness: 0.8,
+                    roughness: 0.15
+                }));
+                this.box(g, [0.88, 2.15, 0.72], [4.8, 1.08, -11.72], new THREE.MeshStandardMaterial({
+                    color: 0xededee,
+                    metalness: 0.65,
+                    roughness: 0.2
+                }), true);
+                this.box(g, [0.88, 2.0, 0.72], [-4.8, 1.0, -11.72], new THREE.MeshStandardMaterial({
+                    color: 0x2a2a2a,
+                    metalness: 0.7
+                }), true);
+                this.box(g, [0.62, 0.44, 0.48], [1.5, 3.3, -11.7], new THREE.MeshStandardMaterial({
+                    color: 0x2c2c2c,
+                    metalness: 0.6
+                }));
+                this.box(g, [3.5, 0.95, 1.5], [0, 0.48, -5.0], new THREE.MeshStandardMaterial({
+                    color: 0x4a5568,
+                    roughness: 0.7
+                }), true);
+                this.box(g, [3.5, 0.07, 1.6], [0, 1.02, -5.0], m.marble, false, true);
+                this.box(g, [3.5, 0.95, 0.07], [0, 0.48, -5.78], m.marble);
+                [-1.0, 0, 1.0].forEach(function(xs) {
+                    this.cyl(g, 0.028, 0.028, 0.82, [xs, 0.41, -5.8], new THREE.MeshStandardMaterial({
+                        color: 0x616161
+                    }), 8);
+                    this.cyl(g, 0.22, 0.22, 0.04, [xs, 0.84, -5.8], new THREE.MeshStandardMaterial({
+                        color: 0x37474f
+                    }), 20);
+                    this.cyl(g, 0.20, 0.20, 0.03, [xs, 0.87, -5.8], new THREE.MeshStandardMaterial({
+                        color: 0x795548,
+                        roughness: 0.8
+                    }), 20);
+                }.bind(this));
+                [-1.0, 0, 1.0].forEach(function(px) {
+                    this.cyl(g, 0.01, 0.01, 1.3, [px, 5.2, -5.0], new THREE.MeshStandardMaterial({
+                        color: 0x888888
+                    }));
+                    this.cyl(g, 0.17, 0.22, 0.22, [px, 3.84, -5.0], new THREE.MeshStandardMaterial({
+                        color: 0xffe8a0,
+                        emissive: 0xffd700,
+                        emissiveIntensity: 0.5
+                    }));
+                    var pl = new THREE.PointLight(0xffd700, 0.65, 8);
+                    pl.position.set(px, 3.74, -5.0);
+                    g.add(pl);
+                }.bind(this));
+                this.cyl(g, 1.4, 1.4, 0.06, [0, 0.79, 8.5], m.darkWood, 36);
+                this.cyl(g, 0.11, 0.11, 0.74, [0, 0.38, 8.5], m.darkWood, 14);
+                this.cyl(g, 0.45, 0.45, 0.04, [0, 0.03, 8.5], m.darkWood, 24);
+                for (var i = 0; i < 6; i++) {
+                    var ang = (i / 6) * Math.PI * 2,
+                        r = 1.9;
+                    var dcx = Math.cos(ang) * r,
+                        dcz = 8.5 + Math.sin(ang) * r;
+                    this.box(g, [0.50, 0.06, 0.50], [dcx, 0.5, dcz], new THREE.MeshStandardMaterial({
+                        color: 0x8d6e63,
+                        roughness: 0.8
+                    }), true);
+                    this.box(g, [0.50, 0.75, 0.07], [dcx, 0.97, dcz + Math.sin(ang) * 0.28], new THREE.MeshStandardMaterial({
+                        color: 0x8d6e63,
+                        roughness: 0.8
+                    }), true);
+                }
+                var kCL = new THREE.PointLight(0xffd700, 0.85, 22);
+                kCL.position.set(0, 5.78, 8.5);
+                g.add(kCL);
+                var kCL2 = new THREE.PointLight(0xffd700, 0.7, 18);
+                kCL2.position.set(0, 5.78, -5.0);
+                g.add(kCL2);
+                this.addPlant(g, [5.5, 0.2, 12.0], [5.5, 0.82, 12.0]);
+                this.addPlant(g, [-5.5, 0.2, 12.0], [-5.5, 0.82, 12.0]);
+            }
+
+            buildBedroom(g, m) {
+                var ROOM_X = 11;
+                var wainMat = new THREE.MeshStandardMaterial({
+                    map: this.textures.wainscot,
+                    roughness: 0.85
+                });
+                this.box(g, [11, 1.4, 0.04], [ROOM_X, 0.7, -12.85], wainMat, false, false);
+                this.box(g, [11, 0.06, 0.05], [ROOM_X, 1.42, -12.86], new THREE.MeshStandardMaterial({
+                    color: 0xeee8df,
+                    roughness: 0.6
+                }));
+                this.box(g, [11, 5.8, 0.04], [ROOM_X, 2.9, -12.88], new THREE.MeshStandardMaterial({
+                    color: 0x2a2826,
+                    roughness: 0.92
+                }));
+                this.box(g, [3.4, 0.32, 4.2], [ROOM_X, 0.16, -9.2], new THREE.MeshStandardMaterial({
+                    color: 0x1c1510,
+                    roughness: 0.7
+                }), true);
+                this.box(g, [3.2, 0.38, 3.9], [ROOM_X, 0.67, -9.2], new THREE.MeshStandardMaterial({
+                    color: 0xf5f0eb,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [3.1, 0.10, 2.5], [ROOM_X, 1.06, -8.6], new THREE.MeshStandardMaterial({
+                    color: 0xd8cfc8,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [3.1, 0.04, 0.55], [ROOM_X, 0.97, -7.2], new THREE.MeshStandardMaterial({
+                    color: 0xf0ebe3,
+                    roughness: 0.92
+                }));
+                this.box(g, [3.4, 1.55, 0.18], [ROOM_X, 1.35, -11.0], m.velvetDeep, true);
+                this.box(g, [3.4, 0.04, 0.04], [ROOM_X, 0.56, -10.91], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.85,
+                    roughness: 0.15
+                }));
+                this.box(g, [3.4, 0.04, 0.04], [ROOM_X, 2.11, -10.91], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.85,
+                    roughness: 0.15
+                }));
+                [9.3, 11, 12.7].forEach(function(px) {
+                    this.box(g, [0.88, 0.22, 0.6], [px, 1.12, -10.48], new THREE.MeshStandardMaterial({
+                        color: 0x8a7a9a,
+                        roughness: 0.96
+                    }), true);
+                }.bind(this));
+                [9.6, 11, 12.4].forEach(function(px) {
+                    this.box(g, [0.8, 0.32, 0.08], [px, 1.22, -10.8], new THREE.MeshStandardMaterial({
+                        color: 0xede8e0,
+                        roughness: 0.95
+                    }), true);
+                }.bind(this));
+                this.box(g, [1.8, 0.05, 1.2], [ROOM_X + 0.6, 1.1, -8.1], new THREE.MeshStandardMaterial({
+                    color: 0x5c4a3a,
+                    roughness: 0.97
+                }));
+                this.box(g, [1.8, 0.04, 0.5], [ROOM_X + 0.6, 1.04, -7.5], new THREE.MeshStandardMaterial({
+                    color: 0x4a3828,
+                    roughness: 0.97
+                }));
+                [9.0, 13.0].forEach(function(nx) {
+                    this.box(g, [0.72, 0.62, 0.54], [nx, 0.62, -10.5], new THREE.MeshStandardMaterial({
+                        color: 0x1a1410,
+                        roughness: 0.75
+                    }), true);
+                    this.box(g, [0.64, 0.24, 0.04], [nx, 0.64, -10.76], new THREE.MeshStandardMaterial({
+                        color: 0x221a14,
+                        roughness: 0.7
+                    }));
+                    this.box(g, [0.18, 0.03, 0.03], [nx, 0.64, -10.8], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }));
+                    this.box(g, [0.74, 0.04, 0.56], [nx, 0.95, -10.5], new THREE.MeshStandardMaterial({
+                        color: 0xc8a87a,
+                        roughness: 0.65,
+                        metalness: 0.05
+                    }), false, true);
+                    this.cyl(g, 0.038, 0.055, 0.55, [nx, 1.48, -10.5], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }), 10);
+                    this.cyl(g, 0.16, 0.10, 0.28, [nx, 1.90, -10.5], new THREE.MeshStandardMaterial({
+                        color: 0xf5e6c8,
+                        emissive: 0xffc060,
+                        emissiveIntensity: 0.35,
+                        roughness: 0.9
+                    }), 16);
+                    var nl = new THREE.PointLight(0xffc060, 0.7, 6);
+                    nl.position.set(nx, 2.1, -10.5);
+                    g.add(nl);
+                    if (nx === 9.0) {
+                        this.cyl(g, 0.04, 0.04, 0.22, [nx + 0.15, 1.11, -10.3], new THREE.MeshStandardMaterial({
+                            color: 0x88bbcc,
+                            transparent: true,
+                            opacity: 0.55,
+                            roughness: 0.05
+                        }), 12);
+                    }
+                    this.cyl(g, 0.08, 0.07, 0.10, [nx - 0.14, 1.01, -10.3], new THREE.MeshStandardMaterial({
+                        color: 0x8d6e63,
+                        roughness: 0.8
+                    }), 10);
+                    this.sphere(g, 0.10, [nx - 0.14, 1.12, -10.3], new THREE.MeshStandardMaterial({
+                        color: 0x3a7a30,
+                        roughness: 0.85
+                    }));
+                }.bind(this));
+                this.box(g, [0.7, 2.65, 5.6], [16.0, 1.33, -2.0], new THREE.MeshStandardMaterial({
+                    color: 0x1a1510,
+                    roughness: 0.75
+                }), true);
+                [-1.6, 0, 1.6].forEach(function(dz) {
+                    this.box(g, [0.04, 2.4, 1.75], [16.0, 1.32, -2.0 + dz], new THREE.MeshStandardMaterial({
+                        color: 0xd8d8d8,
+                        metalness: 0.92,
+                        roughness: 0.05
+                    }));
+                    this.box(g, [0.05, 2.42, 0.04], [16.0, 1.32, -2.0 + dz - 0.88], new THREE.MeshStandardMaterial({
+                        color: 0x1c1410,
+                        roughness: 0.7
+                    }));
+                    this.box(g, [0.05, 2.42, 0.04], [16.0, 1.32, -2.0 + dz + 0.88], new THREE.MeshStandardMaterial({
+                        color: 0x1c1410,
+                        roughness: 0.7
+                    }));
+                    this.box(g, [0.04, 0.22, 0.04], [16.0, 1.32, -2.0 + dz + 0.58], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }));
+                }.bind(this));
+                this.box(g, [1.5, 0.78, 0.54], [14.0, 0.39, 10.5], new THREE.MeshStandardMaterial({
+                    color: 0x1a1510,
+                    roughness: 0.75
+                }), true);
+                this.box(g, [1.5, 0.04, 0.56], [14.0, 0.79, 10.5], new THREE.MeshStandardMaterial({
+                    map: this.textures.marble,
+                    roughness: 0.3,
+                    metalness: 0.08
+                }), false, true);
+                this.box(g, [0.04, 1.2, 1.38], [14.0, 1.59, 10.5], new THREE.MeshStandardMaterial({
+                    color: 0xd0d0d0,
+                    metalness: 0.92,
+                    roughness: 0.04
+                }));
+                this.box(g, [0.06, 1.24, 1.42], [14.0, 1.59, 10.5], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.85,
+                    roughness: 0.18
+                }));
+                this.box(g, [0.04, 1.1, 0.52], [13.6, 1.54, 10.5 - 0.45], new THREE.MeshStandardMaterial({
+                    color: 0xd0d0d0,
+                    metalness: 0.92,
+                    roughness: 0.04
+                }));
+                this.box(g, [0.04, 1.1, 0.52], [14.4, 1.54, 10.5 - 0.45], new THREE.MeshStandardMaterial({
+                    color: 0xd0d0d0,
+                    metalness: 0.92,
+                    roughness: 0.04
+                }));
+                this.box(g, [0.7, 0.08, 0.6], [14.0, 0.45, 11.55], new THREE.MeshStandardMaterial({
+                    color: 0x8a7a9a,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [0.65, 0.06, 0.55], [14.0, 0.5, 11.55], new THREE.MeshStandardMaterial({
+                    color: 0x6a5a7a,
+                    roughness: 0.97
+                }), true);
+                [
+                    [13.65, 11.3],
+                    [14.35, 11.3],
+                    [13.65, 11.8],
+                    [14.35, 11.8]
+                ].forEach(function(p) {
+                    this.cyl(g, 0.02, 0.02, 0.42, [p[0], 0.21, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }), 8);
+                }.bind(this));
+                [
+                    [13.7, 0x88bbcc],
+                    [14.0, 0xcc88aa],
+                    [14.3, 0xaabb88]
+                ].forEach(function(pb) {
+                    this.box(g, [0.10, 0.22, 0.07], [pb[0], 0.93, 10.12], new THREE.MeshStandardMaterial({
+                        color: pb[1],
+                        transparent: true,
+                        opacity: 0.7,
+                        roughness: 0.05,
+                        metalness: 0.2
+                    }));
+                    this.cyl(g, 0.025, 0.025, 0.06, [pb[0], 1.06, 10.12], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.9
+                    }), 8);
+                }.bind(this));
+                [13.3, 14.7].forEach(function(lx) {
+                    this.cyl(g, 0.025, 0.035, 0.38, [lx, 1.0, 10.12], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88
+                    }), 8);
+                    this.cyl(g, 0.09, 0.06, 0.18, [lx, 1.3, 10.12], new THREE.MeshStandardMaterial({
+                        color: 0xfff0d8,
+                        emissive: 0xffcc60,
+                        emissiveIntensity: 0.4,
+                        roughness: 0.9
+                    }), 12);
+                    var vl = new THREE.PointLight(0xffc060, 0.4, 3);
+                    vl.position.set(lx, 1.45, 10.12);
+                    g.add(vl);
+                }.bind(this));
+                var chairMat = new THREE.MeshStandardMaterial({
+                    color: 0x5c4a3a,
+                    roughness: 0.9
+                });
+                var cushionMat2 = new THREE.MeshStandardMaterial({
+                    color: 0x8a7a9a,
+                    roughness: 0.95
+                });
+                this.box(g, [0.88, 0.12, 0.88], [8.4, 0.48, 10.0], chairMat, true);
+                this.box(g, [0.82, 0.08, 0.82], [8.4, 0.57, 10.0], cushionMat2, true);
+                this.box(g, [0.88, 0.80, 0.12], [8.4, 1.08, 9.58], chairMat, true);
+                this.box(g, [0.80, 0.68, 0.08], [8.4, 1.08, 9.55], cushionMat2);
+                this.box(g, [0.1, 0.32, 0.88], [7.97, 0.64, 10.0], chairMat);
+                this.box(g, [0.1, 0.32, 0.88], [8.83, 0.64, 10.0], chairMat);
+                [
+                    [8.0, 9.6],
+                    [8.8, 9.6],
+                    [8.0, 10.4],
+                    [8.8, 10.4]
+                ].forEach(function(p) {
+                    this.cyl(g, 0.02, 0.035, 0.38, [p[0], 0.19, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }), 8);
+                }.bind(this));
+                this.cyl(g, 0.28, 0.28, 0.04, [7.4, 0.58, 10.0], new THREE.MeshStandardMaterial({
+                    color: 0x1a1510,
+                    roughness: 0.7
+                }), 16);
+                this.cyl(g, 0.04, 0.04, 0.54, [7.4, 0.30, 10.0], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.88
+                }), 8);
+                this.cyl(g, 0.14, 0.14, 0.04, [7.4, 0.04, 10.0], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.88
+                }), 12);
+                this.box(g, [0.22, 0.04, 0.16], [7.4, 0.61, 10.0], new THREE.MeshStandardMaterial({
+                    color: 0x8b3a3a,
+                    roughness: 0.8
+                }));
+                var frameColors = [0xb8860b, 0x1a1510, 0xb8860b, 0x1a1510, 0xb8860b, 0xb8860b];
+                var artColors = [0x4a6fa5, 0x8b4513, 0x2e7d32, 0x7b1fa2, 0xc62828, 0xe65100];
+                [
+                    [9.0, -8.5, 1.2, 0.9],
+                    [11.0, -7.8, 0.9, 1.3],
+                    [13.0, -8.5, 1.2, 0.9],
+                    [9.5, -10.0, 0.8, 0.7],
+                    [11.0, -10.2, 1.3, 0.7],
+                    [12.5, -10.0, 0.8, 0.7]
+                ].forEach(function(fw, fi) {
+                    this.box(g, [fw[2] + 0.12, fw[3] + 0.12, 0.04], [fw[0], fw[1] + 3.5, -12.82], new THREE.MeshStandardMaterial({
+                        color: frameColors[fi],
+                        metalness: fi < 3 ? 0.7 : 0.3,
+                        roughness: 0.3
+                    }));
+                    this.box(g, [fw[2], fw[3], 0.02], [fw[0], fw[1] + 3.5, -12.80], new THREE.MeshStandardMaterial({
+                        color: artColors[fi],
+                        roughness: 0.6
+                    }));
+                }.bind(this));
+                var pendantY = 5.9;
+                this.cyl(g, 0.22, 0.22, 0.06, [ROOM_X, pendantY, -5.0], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.85,
+                    roughness: 0.18
+                }), 16);
+                var pendantOffsets = [
+                    [0, -4.5, 0],
+                    [0.8, -4.8, -0.6],
+                    [-0.8, -5.2, -0.6],
+                    [0.6, -5.0, 0.7],
+                    [-0.6, -4.6, 0.7]
+                ];
+                pendantOffsets.forEach(function(po) {
+                    this.cyl(g, 0.008, 0.008, pendantY + po[1] - 0.06 + 5.6, [ROOM_X + po[0], (pendantY + (pendantY + po[1] - 0.06)) / 2, po[2] - 5.0], new THREE.MeshStandardMaterial({
+                        color: 0x888888
+                    }), 6);
+                    this.sphere(g, 0.14, [ROOM_X + po[0], pendantY + po[1], -5.0 + po[2]], new THREE.MeshStandardMaterial({
+                        color: 0xfff0c0,
+                        emissive: 0xffc060,
+                        emissiveIntensity: 0.7,
+                        roughness: 0.05
+                    }));
+                }.bind(this));
+                var brCL = new THREE.PointLight(0xffc060, 0.9, 20);
+                brCL.position.set(ROOM_X, 4.8, -5.0);
+                g.add(brCL);
+                var brCL2 = new THREE.PointLight(0xffc060, 0.5, 14);
+                brCL2.position.set(ROOM_X, 4.5, -10.0);
+                g.add(brCL2);
+                this.addPlant(g, [15.8, 0.2, 12.0], [15.8, 0.82, 12.0]);
+                this.addPlant(g, [6.2, 0.2, 12.0], [6.2, 0.82, 12.0]);
+                this.cyl(g, 0.30, 0.25, 0.72, [6.5, 0.36, -11.5], new THREE.MeshStandardMaterial({
+                    color: 0x6d4c41,
+                    roughness: 0.82
+                }), 14);
+                this.cyl(g, 0.06, 0.08, 1.8, [6.5, 1.26, -11.5], new THREE.MeshStandardMaterial({
+                    color: 0x3d2b1a,
+                    roughness: 0.9
+                }), 8);
+                for (var li = 0; li < 8; li++) {
+                    var lang = (li / 8) * Math.PI * 2,
+                        lx2 = Math.cos(lang) * 0.7,
+                        lz2 = Math.sin(lang) * 0.7;
+                    var lGeo = new THREE.PlaneGeometry(0.28, 0.9);
+                    var leaf = new THREE.Mesh(lGeo, new THREE.MeshStandardMaterial({
+                        color: 0x1b5e20,
+                        roughness: 0.9,
+                        side: THREE.DoubleSide
+                    }));
+                    leaf.position.set(6.5 + lx2, 2.22, -11.5 + lz2);
+                    leaf.rotation.z = -Math.PI * 0.25;
+                    leaf.rotation.y = lang;
+                    g.add(leaf);
+                }
+                this.box(g, [0.15, 2.4, 0.15], [9.5, 1.2, 12.9], m.doorFrame, true);
+                this.box(g, [0.15, 2.4, 0.15], [12.5, 1.2, 12.9], m.doorFrame, true);
+                this.box(g, [3.15, 0.15, 0.15], [11, 2.48, 12.9], m.doorFrame, true);
+                this.box(g, [2.85, 2.3, 0.08], [11, 1.15, 12.88], new THREE.MeshStandardMaterial({
+                    color: 0x1a1510,
+                    roughness: 0.7,
+                    metalness: 0.1
+                }), true);
+                this.sphere(g, 0.06, [12.4, 1.15, 12.82], new THREE.MeshStandardMaterial({
+                    color: 0xb8860b,
+                    metalness: 0.85,
+                    roughness: 0.15
+                }));
+            }
+
+            buildGym(g, m) {
+                var Y = 6.1;
+                var stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 26), new THREE.MeshStandardMaterial({
+                    color: 0xffca28,
+                    roughness: 0.9
+                }));
+                stripe.rotation.x = -Math.PI / 2;
+                stripe.position.set(0, Y + 0.02, 0);
+                g.add(stripe);
+                for (var i = 0; i < 4; i++) this.box(g, [3.2, 2.6, 0.04], [-4.8 + i * 3.2, Y + 1.85, -12.97], new THREE.MeshStandardMaterial({
+                    color: 0xe0e0e0,
+                    metalness: 0.96,
+                    roughness: 0.04
+                }));
+                [
+                    [-5.7, -4.0],
+                    [-4.1, -4.0],
+                    [-5.7, -2.7],
+                    [-4.1, -2.7]
+                ].forEach(function(p) {
+                    this.box(g, [0.12, 2.65, 0.12], [p[0], Y + 1.33, p[1]], m.chrome, true);
+                }.bind(this));
+                this.box(g, [1.8, 0.08, 0.08], [-4.9, Y + 2.88, -4.0], m.chrome);
+                this.box(g, [1.8, 0.08, 0.08], [-4.9, Y + 2.88, -2.7], m.chrome);
+                this.box(g, [1.8, 0.08, 0.08], [-4.9, Y + 2.15, -4.0], m.chrome);
+                this.box(g, [1.8, 0.08, 0.08], [-4.9, Y + 2.15, -2.7], m.chrome);
+                this.cyl(g, 0.04, 0.04, 2.1, [-4.9, Y + 2.2, -3.35], m.chrome, 16);
+                this.cyl(g, 0.29, 0.29, 0.07, [-4.9, Y + 2.2, -3.75], m.blackRubber, 20);
+                this.cyl(g, 0.29, 0.29, 0.07, [-4.9, Y + 2.2, -2.95], m.blackRubber, 20);
+                this.box(g, [0.5, 0.37, 1.5], [-4.9, Y + 0.49, -1.0], m.redPad, true);
+                this.box(g, [0.6, 0.14, 1.62], [-4.9, Y + 0.27, -1.0], m.chrome);
+                this.box(g, [0.44, 0.62, 2.6], [-6.62, Y + 0.41, 1.0], m.chrome, true);
+                for (var di = 0; di < 7; di++) {
+                    var dz = -1.1 + di * 0.36,
+                        dr = 0.075 + di * 0.01;
+                    this.cyl(g, 0.026, 0.026, 0.26, [-6.62, Y + 0.8, dz], m.chrome, 8);
+                    this.sphere(g, dr, [-6.62, Y + 0.8, dz - 0.14], m.blackRubber);
+                    this.sphere(g, dr, [-6.62, Y + 0.8, dz + 0.14], m.blackRubber);
+                }
+                for (var ki = 0; ki < 4; ki++) {
+                    var kb = 0.13 + ki * 0.03;
+                    this.sphere(g, kb, [-5.5 + ki * 0.52, Y + kb, 2.4], m.blackRubber);
+                }
+                this.box(g, [0.98, 0.26, 2.05], [3.5, Y + 0.23, -3.5], m.blackRubber, true);
+                this.box(g, [0.8, 0.05, 1.8], [3.5, Y + 0.42, -3.5], new THREE.MeshStandardMaterial({
+                    color: 0x2a2a2a
+                }));
+                this.box(g, [0.14, 1.12, 0.14], [3.1, Y + 1.06, -4.5], m.chrome, true);
+                this.box(g, [0.14, 1.12, 0.14], [3.9, Y + 1.06, -4.5], m.chrome, true);
+                this.box(g, [0.98, 0.52, 0.09], [3.5, Y + 1.65, -4.5], new THREE.MeshStandardMaterial({
+                    color: 0x111111,
+                    metalness: 0.5
+                }));
+                this.box(g, [0.48, 0.92, 1.12], [5.5, Y + 0.66, -3.4], m.chrome, true);
+                this.box(g, [0.42, 0.13, 0.5], [5.5, Y + 1.22, -3.1], m.blackRubber);
+                this.box(g, [0.62, 0.09, 0.09], [5.5, Y + 1.5, -3.82], m.chrome);
+                this.cyl(g, 0.36, 0.36, 0.07, [5.5, Y + 0.38, -3.4], m.chrome, 24);
+                this.box(g, [0.58, 0.18, 2.2], [5.5, Y + 0.19, -0.8], new THREE.MeshStandardMaterial({
+                    color: 0x1c1c1c
+                }), true);
+                this.box(g, [0.28, 0.32, 0.38], [5.5, Y + 0.37, -1.8], m.blackRubber);
+                this.box(g, [0.58, 0.52, 0.09], [5.5, Y + 0.72, -1.8], new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a
+                }));
+                var gymMat2 = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 2.0), new THREE.MeshStandardMaterial({
+                    color: 0xff6600,
+                    roughness: 0.95
+                }));
+                gymMat2.rotation.x = -Math.PI / 2;
+                gymMat2.position.set(-2.0, Y + 0.02, 2.8);
+                g.add(gymMat2);
+                this.cyl(g, 0.32, 0.32, 1.42, [5.8, Y + 1.71, 2.4], m.blackRubber, 20);
+                this.cyl(g, 0.025, 0.025, 0.88, [5.8, Y + 2.87, 2.4], m.chrome, 8);
+                [
+                    [-5.2, 0xf39c12],
+                    [-1.8, 0x2ecc71],
+                    [1.8, 0x3498db],
+                    [5.2, 0xe74c3c]
+                ].forEach(function(p) {
+                    this.box(g, [0.98, 1.28, 0.04], [p[0], Y + 2.8, 12.94], new THREE.MeshStandardMaterial({
+                        color: p[1],
+                        roughness: 0.6
+                    }));
+                }.bind(this));
+                this.box(g, [0.5, 0.74, 0.5], [-6.5, Y + 0.47, 11.0], new THREE.MeshStandardMaterial({
+                    color: 0xfafafa,
+                    roughness: 0.4
+                }), true);
+                this.cyl(g, 0.18, 0.18, 0.56, [-6.5, Y + 1.14, 11.0], new THREE.MeshStandardMaterial({
+                    color: 0x90caf9,
+                    transparent: true,
+                    opacity: 0.58
+                }), 16);
+                this.addPlant(g, [6.5, Y + 0.2, 11.0], [6.5, Y + 0.8, 11.0]);
+                [-4.5, -1.5, 1.5, 4.5].forEach(function(gx) {
+                    var gl = new THREE.PointLight(0xffffff, 0.9, 16);
+                    gl.position.set(gx, Y + 4.0, -6);
+                    g.add(gl);
+                    var gl2 = new THREE.PointLight(0xffffff, 0.9, 16);
+                    gl2.position.set(gx, Y + 4.0, 6);
+                    g.add(gl2);
+                });
+                for (var ll = 0; ll < 5; ll++) {
+                    var lll = new THREE.PointLight(0x40c4ff, 0.22, 9);
+                    lll.position.set(-5.0 + ll * 2.5, Y + 4.1, -12.5);
+                    g.add(lll);
+                }
+            }
+
+            buildUpperBedroom(g, m) {
+                var Y = 6.1,
+                    ROOM_X = 11;
+                this.box(g, [0.15, 4.2, 26], [5.5, Y + 2.1, 0], m.interiorWall, true);
+                this.box(g, [11, 4.2, 0.04], [ROOM_X, Y + 2.1, -8.25], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.92
+                }));
+                this.box(g, [11, 1.2, 0.04], [ROOM_X, Y + 0.6, -8.22], new THREE.MeshStandardMaterial({
+                    map: this.textures.wainscot,
+                    roughness: 0.88
+                }));
+                this.box(g, [11, 0.05, 0.05], [ROOM_X, Y + 1.22, -8.22], new THREE.MeshStandardMaterial({
+                    color: 0xd4c8a8,
+                    roughness: 0.6
+                }));
+                this.box(g, [3.2, 0.28, 4.0], [ROOM_X, Y + 0.14, -5.5], new THREE.MeshStandardMaterial({
+                    color: 0x3d2b1a,
+                    roughness: 0.7
+                }), true);
+                this.box(g, [3.0, 0.34, 3.7], [ROOM_X, Y + 0.62, -5.5], new THREE.MeshStandardMaterial({
+                    color: 0xf2ede6,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [2.9, 0.08, 2.2], [ROOM_X, Y + 0.97, -5.0], new THREE.MeshStandardMaterial({
+                    color: 0xc5b8d8,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [2.9, 0.04, 0.45], [ROOM_X, Y + 0.90, -3.8], new THREE.MeshStandardMaterial({
+                    color: 0xd8d0e8,
+                    roughness: 0.92
+                }));
+                this.box(g, [3.2, 1.45, 0.16], [ROOM_X, Y + 1.32, -7.25], new THREE.MeshStandardMaterial({
+                    color: 0xc5b8a0,
+                    roughness: 0.97
+                }), true);
+                this.box(g, [3.2, 0.04, 0.04], [ROOM_X, Y + 0.58, -7.18], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.82,
+                    roughness: 0.18
+                }));
+                this.box(g, [3.2, 0.04, 0.04], [ROOM_X, Y + 2.04, -7.18], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.82,
+                    roughness: 0.18
+                }));
+                [9.6, 11.0, 12.4].forEach(function(px) {
+                    this.box(g, [0.85, 0.20, 0.55], [px, Y + 1.10, -6.85], new THREE.MeshStandardMaterial({
+                        color: 0x4a6741,
+                        roughness: 0.96
+                    }), true);
+                }.bind(this));
+                [9.8, 12.2].forEach(function(px) {
+                    this.box(g, [0.72, 0.28, 0.07], [px, Y + 1.20, -7.1], new THREE.MeshStandardMaterial({
+                        color: 0xede8e0,
+                        roughness: 0.95
+                    }), true);
+                }.bind(this));
+                this.box(g, [2.0, 0.06, 1.1], [ROOM_X - 0.3, Y + 1.04, -4.0], new THREE.MeshStandardMaterial({
+                    color: 0xe8ddc8,
+                    roughness: 0.97
+                }));
+                this.box(g, [2.0, 0.04, 0.4], [ROOM_X - 0.3, Y + 0.98, -3.4], new THREE.MeshStandardMaterial({
+                    color: 0xd8cbb8,
+                    roughness: 0.97
+                }));
+                [9.4, 12.6].forEach(function(nx) {
+                    this.box(g, [0.06, 0.06, 0.36], [nx, Y + 1.02, -7.0], new THREE.MeshStandardMaterial({
+                        color: 0xcfb53b,
+                        metalness: 0.85,
+                        roughness: 0.12
+                    }));
+                    this.box(g, [0.64, 0.04, 0.44], [nx, Y + 1.06, -6.78], new THREE.MeshStandardMaterial({
+                        color: 0x3d2b1a,
+                        roughness: 0.7
+                    }), false, true);
+                    this.cyl(g, 0.025, 0.03, 0.50, [nx, Y + 1.56, -6.82], new THREE.MeshStandardMaterial({
+                        color: 0xcfb53b,
+                        metalness: 0.88,
+                        roughness: 0.14
+                    }), 10);
+                    this.cyl(g, 0.12, 0.08, 0.22, [nx, Y + 1.95, -6.82], new THREE.MeshStandardMaterial({
+                        color: 0xfff0d0,
+                        emissive: 0xffc040,
+                        emissiveIntensity: 0.38,
+                        roughness: 0.9
+                    }), 14);
+                    var nl = new THREE.PointLight(0xffc040, 0.65, 5);
+                    nl.position.set(nx, Y + 2.1, -6.82);
+                    g.add(nl);
+                    var bookColors = [0x7b5ea7, 0x2e7d32, 0xc62828];
+                    bookColors.forEach(function(bc, bi) {
+                        this.box(g, [0.16, 0.04, 0.38], [nx + 0.08, Y + 1.12 + bi * 0.045, -6.66], new THREE.MeshStandardMaterial({
+                            color: bc,
+                            roughness: 0.8
+                        }));
+                    }.bind(this));
+                }.bind(this));
+                this.box(g, [0.65, 2.5, 4.8], [16.0, Y + 1.25, 1.5], new THREE.MeshStandardMaterial({
+                    color: 0x3d2b1a,
+                    roughness: 0.78
+                }), true);
+                [-1.6, -0.5, 0.6, 1.7].forEach(function(dz) {
+                    this.box(g, [0.04, 2.28, 1.0], [16.0, Y + 1.25, 1.5 + dz], new THREE.MeshStandardMaterial({
+                        color: 0xd2d2d2,
+                        metalness: 0.9,
+                        roughness: 0.06
+                    }));
+                    this.box(g, [0.05, 2.30, 0.04], [16.0, Y + 1.25, 1.5 + dz - 0.52], new THREE.MeshStandardMaterial({
+                        color: 0x2a1e12,
+                        roughness: 0.7
+                    }));
+                    this.box(g, [0.05, 2.30, 0.04], [16.0, Y + 1.25, 1.5 + dz + 0.52], new THREE.MeshStandardMaterial({
+                        color: 0x2a1e12,
+                        roughness: 0.7
+                    }));
+                    this.box(g, [0.04, 0.18, 0.04], [16.0, Y + 1.25, 1.5 + dz + 0.34], new THREE.MeshStandardMaterial({
+                        color: 0xcfb53b,
+                        metalness: 0.88,
+                        roughness: 0.12
+                    }));
+                }.bind(this));
+                this.box(g, [0.60, 0.12, 2.2], [5.72, Y + 0.53, 0.0], m.darkWood, true);
+                this.box(g, [0.62, 0.07, 2.15], [5.72, Y + 1.09, 0.0], m.darkWood);
+                this.box(g, [0.58, 0.10, 2.1], [5.72, Y + 0.58, 0.0], new THREE.MeshStandardMaterial({
+                    color: 0xc5b8d8,
+                    roughness: 0.96
+                }));
+                [
+                    [5.72, Y + 0.80, 0.65],
+                    [5.72, Y + 0.80, -0.65]
+                ].forEach(function(p) {
+                    this.box(g, [0.5, 0.28, 0.40], [p[0], p[1], p[2]], new THREE.MeshStandardMaterial({
+                        color: 0x4a6741,
+                        roughness: 0.95
+                    }), true);
+                }.bind(this));
+                this.box(g, [0.07, 1.65, 1.3], [5.49, Y + 2.32, 0.0], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.8,
+                    roughness: 0.2
+                }));
+                this.box(g, [0.02, 1.45, 1.1], [5.46, Y + 2.32, 0.0], new THREE.MeshStandardMaterial({
+                    color: 0xd8d8d8,
+                    metalness: 0.92,
+                    roughness: 0.05
+                }));
+                this.box(g, [1.0, 0.62, 0.55], [14.2, Y + 0.31, 8.2], new THREE.MeshStandardMaterial({
+                    color: 0x3d2b1a,
+                    roughness: 0.75
+                }), true);
+                this.box(g, [1.0, 0.04, 0.58], [14.2, Y + 0.64, 8.2], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.6,
+                    roughness: 0.35
+                }), false, true);
+                this.box(g, [0.68, 0.10, 0.62], [14.2, Y + 0.48, 9.2], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.95
+                }), true);
+                this.box(g, [0.68, 0.68, 0.10], [14.2, Y + 1.02, 8.82], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.95
+                }), true);
+                [
+                    [13.85, 9.0],
+                    [14.55, 9.0],
+                    [13.85, 9.4],
+                    [14.55, 9.4]
+                ].forEach(function(p) {
+                    this.cyl(g, 0.02, 0.02, 0.42, [p[0], Y + 0.24, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0xcfb53b,
+                        metalness: 0.88
+                    }), 8);
+                }.bind(this));
+                this.box(g, [0.55, 0.02, 0.38], [14.2, Y + 0.67, 8.05], new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.4,
+                    metalness: 0.6
+                }));
+                this.box(g, [0.50, 0.38, 0.02], [14.2, Y + 0.85, 7.86], new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.4,
+                    metalness: 0.6
+                }));
+                this.box(g, [0.46, 0.32, 0.01], [14.2, Y + 0.85, 7.85], new THREE.MeshStandardMaterial({
+                    color: 0x2c4a88,
+                    roughness: 0.5,
+                    emissive: 0x1a2d55,
+                    emissiveIntensity: 0.15
+                }));
+                var artData = [
+                    [9.0, -5.6, 1.0, 0.8, 0xf4d03f],
+                    [11.0, -5.0, 0.7, 1.1, 0x85c1e9],
+                    [13.0, -5.6, 1.0, 0.8, 0xa8d5a2],
+                    [9.8, -4.2, 0.7, 0.7, 0xe8a0a0],
+                    [12.2, -4.2, 0.7, 0.7, 0xb0a0e8]
+                ];
+                artData.forEach(function(ad) {
+                    this.box(g, [ad[2] + 0.1, ad[3] + 0.1, 0.03], [ad[0], Y + ad[1] + 4.5, -8.18], new THREE.MeshStandardMaterial({
+                        color: 0xcfb53b,
+                        metalness: 0.7,
+                        roughness: 0.25
+                    }));
+                    this.box(g, [ad[2], ad[3], 0.02], [ad[0], Y + ad[1] + 4.5, -8.16], new THREE.MeshStandardMaterial({
+                        color: ad[4],
+                        roughness: 0.65
+                    }));
+                }.bind(this));
+                var pendY = Y + 3.95;
+                var ringGeo = new THREE.TorusGeometry(0.55, 0.025, 8, 32);
+                var ring = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.88,
+                    roughness: 0.12
+                }));
+                ring.position.set(ROOM_X, pendY, -4.0);
+                g.add(ring);
+                for (var pi = 0; pi < 6; pi++) {
+                    var pang = (pi / 6) * Math.PI * 2,
+                        px2 = Math.cos(pang) * 0.55,
+                        pz2 = Math.sin(pang) * 0.55;
+                    this.cyl(g, 0.005, 0.005, 0.25, [ROOM_X + px2, pendY - 0.12, -4.0 + pz2], new THREE.MeshStandardMaterial({
+                        color: 0x888888
+                    }), 6);
+                    this.sphere(g, 0.10, [ROOM_X + px2, pendY - 0.38, -4.0 + pz2], new THREE.MeshStandardMaterial({
+                        color: 0xfff0c0,
+                        emissive: 0xffc040,
+                        emissiveIntensity: 0.65,
+                        roughness: 0.05
+                    }));
+                }
+                this.cyl(g, 0.008, 0.008, 0.28, [ROOM_X, pendY + 0.14, -4.0], new THREE.MeshStandardMaterial({
+                    color: 0x888888
+                }), 6);
+                this.cyl(g, 0.04, 0.04, 0.06, [ROOM_X, pendY + 0.29, -4.0], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.88
+                }), 12);
+                var ubML = new THREE.PointLight(0xffc040, 0.9, 18);
+                ubML.position.set(ROOM_X, pendY - 0.2, -4.0);
+                g.add(ubML);
+                var ubML2 = new THREE.PointLight(0xffc040, 0.5, 12);
+                ubML2.position.set(ROOM_X, pendY - 0.2, -8.0);
+                g.add(ubML2);
+                this.cyl(g, 0.22, 0.18, 0.55, [16.2, Y + 0.28, -8.2], new THREE.MeshStandardMaterial({
+                    color: 0x5d4037,
+                    roughness: 0.82
+                }), 12);
+                for (var si = 0; si < 6; si++) {
+                    var sang = (si / 6) * Math.PI * 2;
+                    var leafGeo2 = new THREE.PlaneGeometry(0.14, 1.1);
+                    var leaf2 = new THREE.Mesh(leafGeo2, new THREE.MeshStandardMaterial({
+                        color: si % 2 === 0 ? 0x2d5016 : 0x4a7a22,
+                        roughness: 0.9,
+                        side: THREE.DoubleSide
+                    }));
+                    leaf2.position.set(16.2 + Math.cos(sang) * 0.22, Y + 1.1, -8.2 + Math.sin(sang) * 0.22);
+                    leaf2.rotation.y = sang;
+                    leaf2.rotation.z = -0.18;
+                    g.add(leaf2);
+                }
+                this.cyl(g, 0.12, 0.10, 0.18, [13.6, Y + 0.73, 7.92], new THREE.MeshStandardMaterial({
+                    color: 0x8d6e63,
+                    roughness: 0.8
+                }), 10);
+                this.sphere(g, 0.18, [13.6, Y + 0.94, 7.92], new THREE.MeshStandardMaterial({
+                    color: 0x4caf50,
+                    roughness: 0.9
+                }));
+                this.box(g, [0.15, 2.45, 0.15], [5.5, Y + 1.225, 3.2], m.doorFrame, true);
+                this.box(g, [0.15, 2.45, 0.15], [5.5, Y + 1.225, 4.7], m.doorFrame, true);
+                this.box(g, [0.15, 0.15, 1.65], [5.5, Y + 2.525, 3.95], m.doorFrame, true);
+                this.box(g, [0.09, 2.32, 1.38], [5.55, Y + 1.15, 3.95], new THREE.MeshStandardMaterial({
+                    color: 0x2a1e12,
+                    roughness: 0.7,
+                    metalness: 0.1
+                }), true);
+                this.sphere(g, 0.06, [5.59, Y + 1.15, 4.55], new THREE.MeshStandardMaterial({
+                    color: 0xcfb53b,
+                    metalness: 0.85,
+                    roughness: 0.15
+                }));
+            }
+
+            createGymLounge() {
+                var G = new THREE.Group(),
+                    Y = 6.1,
+                    cx = -11.0,
+                    cz = 0.0;
+                var rug = new THREE.Mesh(new THREE.PlaneGeometry(7.0, 14.0), new THREE.MeshStandardMaterial({
+                    color: 0x37474f,
+                    roughness: 0.9
+                }));
+                rug.rotation.x = -Math.PI / 2;
+                rug.position.set(cx, Y + 0.015, cz);
+                G.add(rug);
+                var rugBorder = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 13.2), new THREE.MeshStandardMaterial({
+                    color: 0x546e7a,
+                    roughness: 0.9
+                }));
+                rugBorder.rotation.x = -Math.PI / 2;
+                rugBorder.position.set(cx, Y + 0.018, cz);
+                G.add(rugBorder);
+                var sx = cx,
+                    sz = -10.5;
+                this.box(G, [5.0, 0.42, 1.5], [sx, Y + 0.21, sz], new THREE.MeshStandardMaterial({
+                    color: 0x37474f,
+                    roughness: 0.9
+                }), true);
+                this.box(G, [4.8, 0.28, 1.3], [sx, Y + 0.56, sz], new THREE.MeshStandardMaterial({
+                    color: 0x455a64,
+                    roughness: 0.9
+                }), true);
+                this.box(G, [5.0, 0.76, 0.20], [sx, Y + 1.04, sz - 0.65], new THREE.MeshStandardMaterial({
+                    color: 0x37474f,
+                    roughness: 0.9
+                }), true);
+                this.box(G, [0.20, 0.62, 1.5], [sx - 2.6, Y + 0.73, sz], new THREE.MeshStandardMaterial({
+                    color: 0x37474f,
+                    roughness: 0.9
+                }), true);
+                this.box(G, [0.20, 0.62, 1.5], [sx + 2.6, Y + 0.73, sz], new THREE.MeshStandardMaterial({
+                    color: 0x37474f,
+                    roughness: 0.9
+                }), true);
+                [0xef9a9a, 0xfff9c4, 0xb2dfdb, 0xf8bbd0].forEach(function(c, i) {
+                    this.box(G, [0.52, 0.22, 0.40], [sx - 1.8 + i * 1.2, Y + 0.88, sz - 0.46], new THREE.MeshStandardMaterial({
+                        color: c,
+                        roughness: 0.9
+                    }));
+                }.bind(this));
+                var lx = cx - 3.2,
+                    lz2 = cz - 2.5;
+                var chairL = new THREE.Group();
+                this.box(chairL, [1.10, 0.40, 1.10], [0, 0.20, 0], new THREE.MeshStandardMaterial({
+                    color: 0xbf6a51,
+                    roughness: 0.9
+                }), true);
+                this.box(chairL, [1.10, 0.26, 1.00], [0, 0.53, 0], new THREE.MeshStandardMaterial({
+                    color: 0xd4775c,
+                    roughness: 0.9
+                }), true);
+                this.box(chairL, [1.10, 0.72, 0.18], [0, 0.86, -0.50], new THREE.MeshStandardMaterial({
+                    color: 0xbf6a51,
+                    roughness: 0.9
+                }), true);
+                this.box(chairL, [0.18, 0.54, 1.00], [-0.55, 0.67, 0], new THREE.MeshStandardMaterial({
+                    color: 0xbf6a51,
+                    roughness: 0.9
+                }));
+                this.box(chairL, [0.18, 0.54, 1.00], [0.55, 0.67, 0], new THREE.MeshStandardMaterial({
+                    color: 0xbf6a51,
+                    roughness: 0.9
+                }));
+                this.box(chairL, [0.44, 0.20, 0.38], [0, 0.94, 0], new THREE.MeshStandardMaterial({
+                    color: 0xfff8e1,
+                    roughness: 0.9
+                }));
+                chairL.position.set(lx, Y, lz2);
+                chairL.rotation.y = Math.PI * 0.14;
+                G.add(chairL);
+                var rx = cx + 3.2,
+                    rz = cz - 2.5;
+                var chairR = new THREE.Group();
+                this.box(chairR, [1.10, 0.40, 1.10], [0, 0.20, 0], new THREE.MeshStandardMaterial({
+                    color: 0x546e7a,
+                    roughness: 0.9
+                }), true);
+                this.box(chairR, [1.10, 0.26, 1.00], [0, 0.53, 0], new THREE.MeshStandardMaterial({
+                    color: 0x607d8b,
+                    roughness: 0.9
+                }), true);
+                this.box(chairR, [1.10, 0.72, 0.18], [0, 0.86, -0.50], new THREE.MeshStandardMaterial({
+                    color: 0x546e7a,
+                    roughness: 0.9
+                }), true);
+                this.box(chairR, [0.18, 0.54, 1.00], [-0.55, 0.67, 0], new THREE.MeshStandardMaterial({
+                    color: 0x546e7a,
+                    roughness: 0.9
+                }));
+                this.box(chairR, [0.18, 0.54, 1.00], [0.55, 0.67, 0], new THREE.MeshStandardMaterial({
+                    color: 0x546e7a,
+                    roughness: 0.9
+                }));
+                this.box(chairR, [0.44, 0.20, 0.38], [0, 0.94, 0], new THREE.MeshStandardMaterial({
+                    color: 0xb2ebf2,
+                    roughness: 0.9
+                }));
+                chairR.position.set(rx, Y, rz);
+                chairR.rotation.y = -Math.PI * 0.14;
+                G.add(chairR);
+                var tx = cx,
+                    tz = -4.5;
+                [
+                    [-0.88, -1.15],
+                    [-0.88, 0.15],
+                    [0.88, -1.15],
+                    [0.88, 0.15]
+                ].forEach(function(p) {
+                    this.box(G, [0.10, 0.40, 0.10], [tx + p[0], Y + 0.20, tz + p[1]], new THREE.MeshStandardMaterial({
+                        color: 0x4e342e,
+                        roughness: 0.75
+                    }));
+                }.bind(this));
+                this.box(G, [2.0, 0.06, 1.5], [tx, Y + 0.16, tz], new THREE.MeshStandardMaterial({
+                    color: 0x4e342e,
+                    roughness: 0.75
+                }));
+                this.box(G, [2.1, 0.06, 1.6], [tx, Y + 0.44, tz], new THREE.MeshStandardMaterial({
+                    color: 0x1a1f2e,
+                    metalness: 0.3,
+                    roughness: 0.12,
+                    transparent: true,
+                    opacity: 0.88
+                }), false, true);
+                var ot = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.32, 24), new THREE.MeshStandardMaterial({
+                    color: 0x6d4c41,
+                    roughness: 0.9
+                }));
+                ot.position.set(cx, Y + 0.36, cz - 6.5);
+                ot.castShadow = true;
+                G.add(ot);
+                var ls = new THREE.Group();
+                this.box(ls, [2.2, 0.40, 1.0], [0, 0.20, 0], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.9
+                }), true);
+                this.box(ls, [2.2, 0.26, 0.9], [0, 0.53, 0], new THREE.MeshStandardMaterial({
+                    color: 0x5a7a50,
+                    roughness: 0.9
+                }), true);
+                this.box(ls, [2.2, 0.65, 0.18], [0, 0.82, 0.50], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.9
+                }), true);
+                this.box(ls, [0.18, 0.50, 1.0], [-1.1, 0.65, 0], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.9
+                }));
+                this.box(ls, [0.18, 0.50, 1.0], [1.1, 0.65, 0], new THREE.MeshStandardMaterial({
+                    color: 0x4a6741,
+                    roughness: 0.9
+                }));
+                ls.position.set(cx, Y, cz + 7.5);
+                ls.rotation.y = Math.PI;
+                G.add(ls);
+                this.box(G, [0.22, 3.2, 4.0], [-16.28, Y + 1.6, -4.0], new THREE.MeshStandardMaterial({
+                    color: 0x4e342e,
+                    roughness: 0.75
+                }), true);
+                [0.40, 1.10, 1.80, 2.50].forEach(function(sh) {
+                    this.box(G, [0.18, 0.05, 3.9], [-16.26, Y + sh, -4.0], new THREE.MeshStandardMaterial({
+                        color: 0x5d4037,
+                        roughness: 0.75
+                    }));
+                }.bind(this));
+                [
+                    [-16.3, -12.0],
+                    [-16.3, 12.0],
+                    [-5.7, -12.0],
+                    [-5.7, 12.0]
+                ].forEach(function(p) {
+                    this.cyl(G, 0.20, 0.26, 0.48, [p[0], Y + 0.48, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0x8d6e63
+                    }), 10);
+                    this.sphere(G, 0.42, [p[0], Y + 1.12, p[1]], new THREE.MeshStandardMaterial({
+                        color: 0x2e7d32,
+                        roughness: 0.9
+                    }));
+                }.bind(this));
+                [
+                    [-13.5, 0x4fc3f7],
+                    [-11.0, 0xffcc80],
+                    [-8.5, 0xce93d8]
+                ].forEach(function(p) {
+                    this.box(G, [1.80, 1.20, 0.06], [p[0], Y + 2.50, -12.88], new THREE.MeshStandardMaterial({
+                        color: 0x4e342e,
+                        roughness: 0.75
+                    }));
+                    this.box(G, [1.62, 1.02, 0.02], [p[0], Y + 2.50, -12.84], new THREE.MeshStandardMaterial({
+                        color: p[1],
+                        roughness: 0.55
+                    }));
+                }.bind(this));
+                [cx - 3.0, cx, cx + 3.0].forEach(function(px) {
+                    [-6.0, 6.0].forEach(function(pz) {
+                        this.cyl(G, 0.012, 0.012, 1.6, [px, Y + 4.2, pz], new THREE.MeshStandardMaterial({
+                            color: 0x888888
+                        }));
+                        this.cyl(G, 0.20, 0.26, 0.22, [px, Y + 3.38, pz], new THREE.MeshStandardMaterial({
+                            color: 0xffe8a0,
+                            emissive: 0xffd700,
+                            emissiveIntensity: 0.60
+                        }));
+                        var pl = new THREE.PointLight(0xffd700, 0.80, 12);
+                        pl.position.set(px, Y + 3.2, pz);
+                        G.add(pl);
+                    }.bind(this));
+                }.bind(this));
+                this.scene.add(G);
+            }
+
+            addPlant(group, potPos, plantPos) {
+                var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.4, 8), new THREE.MeshStandardMaterial({
+                    color: 0xa0522d,
+                    roughness: 0.7
+                }));
+                pot.position.set(potPos[0], potPos[1], potPos[2]);
+                pot.castShadow = true;
+                group.add(pot);
+                var plant = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.8, 8), new THREE.MeshStandardMaterial({
+                    color: 0x2d5016,
+                    roughness: 0.9
+                }));
+                plant.position.set(plantPos[0], plantPos[1], plantPos[2]);
+                group.add(plant);
+            }
+
+            box(group, size, pos, mat, castShadow, receiveShadow) {
+                var mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), mat);
+                mesh.position.set(pos[0], pos[1], pos[2]);
+                if (castShadow) mesh.castShadow = true;
+                if (receiveShadow) mesh.receiveShadow = true;
+                group.add(mesh);
+                return mesh;
+            }
+            sphere(group, radius, pos, mat) {
+                var mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16), mat);
+                mesh.position.set(pos[0], pos[1], pos[2]);
+                group.add(mesh);
+                return mesh;
+            }
+            cyl(group, rT, rB, h, pos, mat, seg) {
+                var mesh = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, h, seg || 8), mat);
+                mesh.position.set(pos[0], pos[1], pos[2]);
+                group.add(mesh);
+                return mesh;
+            }
+
+            createCars() {
+                this.createMercedes(22, 0, -4, Math.PI / 2, 0x0a0a0a, 0x070707, 1.25);
+                this.createMercedes(22, 0, 8, Math.PI / 2, 0xcc1100, 0xa50e00, 1.25);
+            }
+
+            createMercedes(cx, cy, cz, ry, bodyColor, bodyColor2, carScale) {
+                var car = new THREE.Group();
+                bodyColor = bodyColor || 0x1a1a2e;
+                bodyColor2 = bodyColor2 || 0x16213e;
+                carScale = carScale || 1.0;
+                var bodyMat = new THREE.MeshStandardMaterial({
+                    color: bodyColor,
+                    metalness: 0.92,
+                    roughness: 0.10
+                });
+                var bodyMat2 = new THREE.MeshStandardMaterial({
+                    color: bodyColor2,
+                    metalness: 0.88,
+                    roughness: 0.14
+                });
+                var chromeMat = new THREE.MeshStandardMaterial({
+                    color: 0xe8e8e8,
+                    metalness: 0.98,
+                    roughness: 0.04
+                });
+                var blackMat = new THREE.MeshStandardMaterial({
+                    color: 0x111111,
+                    roughness: 0.85
+                });
+                var tireMat = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.92
+                });
+                var rimMat = new THREE.MeshStandardMaterial({
+                    color: 0xd4d4d4,
+                    metalness: 0.95,
+                    roughness: 0.06
+                });
+                var glassMat = new THREE.MeshPhysicalMaterial({
+                    color: 0x88bbcc,
+                    metalness: 0.1,
+                    roughness: 0.05,
+                    transparent: true,
+                    opacity: 0.55,
+                    transmission: 0.4
+                });
+                var lightMat = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: 0xffffcc,
+                    emissiveIntensity: 0.6,
+                    roughness: 0.1
+                });
+                var redMat = new THREE.MeshStandardMaterial({
+                    color: 0xcc0000,
+                    emissive: 0x880000,
+                    emissiveIntensity: 0.4,
+                    roughness: 0.2
+                });
+                var darkBodyMat = new THREE.MeshStandardMaterial({
+                    color: 0x0d0d1a,
+                    metalness: 0.92,
+                    roughness: 0.10
+                });
+                var sillMat = new THREE.MeshStandardMaterial({
+                    color: 0x222222,
+                    roughness: 0.6,
+                    metalness: 0.3
+                });
+                this.box(car, [4.6, 0.48, 1.95], [0, 0.54, 0], darkBodyMat, true);
+                this.box(car, [4.2, 0.62, 1.88], [0, 0.98, 0], bodyMat, true);
+                this.box(car, [2.2, 0.58, 1.72], [0.18, 1.52, 0], bodyMat, true);
+                this.box(car, [2.0, 0.28, 1.60], [-0.28, 1.78, 0], bodyMat2, true);
+                this.box(car, [1.55, 0.18, 1.80], [-1.28, 1.08, 0], bodyMat, true);
+                this.box(car, [0.95, 0.22, 1.80], [1.82, 1.08, 0], bodyMat, true);
+                this.box(car, [0.18, 0.42, 1.82], [-2.38, 0.62, 0], bodyMat2, true);
+                this.box(car, [0.18, 0.38, 1.82], [2.38, 0.58, 0], bodyMat2, true);
+                this.box(car, [4.2, 0.08, 1.96], [0, 0.32, 0], sillMat);
+                this.box(car, [2.05, 0.12, 1.68], [0.18, 1.80, 0], chromeMat, true);
+                this.box(car, [0.06, 0.72, 1.56], [-1.02, 1.50, 0], glassMat);
+                this.box(car, [0.06, 0.62, 1.50], [1.28, 1.48, 0], glassMat);
+                this.box(car, [1.0, 0.44, 0.04], [-0.18, 1.52, 0.98], glassMat);
+                this.box(car, [0.72, 0.40, 0.04], [0.88, 1.50, 0.98], glassMat);
+                this.box(car, [1.0, 0.44, 0.04], [-0.18, 1.52, -0.98], glassMat);
+                this.box(car, [0.72, 0.40, 0.04], [0.88, 1.50, -0.98], glassMat);
+                this.box(car, [0.04, 0.50, 1.60], [-1.00, 1.50, 0], chromeMat);
+                this.box(car, [0.04, 0.46, 1.55], [1.25, 1.48, 0], chromeMat);
+                this.box(car, [0.08, 0.32, 1.10], [-2.38, 0.82, 0], chromeMat, true);
+                this.box(car, [0.06, 0.26, 1.0], [-2.40, 0.82, 0], blackMat);
+                for (var gb = 0; gb < 5; gb++) this.box(car, [0.06, 0.04, 1.0], [-2.39, 0.68 + gb * 0.07, 0], chromeMat);
+                this.sphere(car, 0.085, [-2.42, 1.05, 0], chromeMat);
+                this.cyl(car, 0.068, 0.068, 0.02, [-2.43, 1.05, 0], chromeMat, 3);
+                this.box(car, [0.07, 0.14, 1.6], [-2.38, 0.46, 0], blackMat);
+                this.box(car, [0.28, 0.04, 1.72], [-2.28, 0.28, 0], blackMat);
+                [0.68, -0.68].forEach(function(z) {
+                    this.box(car, [0.08, 0.18, 0.36], [-2.38, 0.98, z], lightMat, true);
+                    this.box(car, [0.06, 0.06, 0.28], [-2.39, 1.08, z], chromeMat);
+                    this.box(car, [0.06, 0.04, 0.52], [-2.38, 1.12, z], new THREE.MeshStandardMaterial({
+                        color: 0xffffff,
+                        emissive: 0xffffff,
+                        emissiveIntensity: 0.9,
+                        roughness: 0.05
+                    }));
+                }.bind(this));
+                [0.65, -0.65].forEach(function(z) {
+                    this.box(car, [0.06, 0.18, 0.42], [2.40, 0.90, z], redMat, true);
+                }.bind(this));
+                this.box(car, [0.04, 0.04, 1.82], [2.40, 1.06, 0], chromeMat);
+                [0.55, -0.55].forEach(function(z) {
+                    this.cyl(car, 0.06, 0.06, 0.12, [2.44, 0.34, z], chromeMat, 16);
+                    this.cyl(car, 0.055, 0.055, 0.06, [2.50, 0.34, z], blackMat, 16);
+                }.bind(this));
+                [
+                    [-0.35, 0.94, 1.0],
+                    [-0.35, 0.94, -1.0],
+                    [0.82, 0.94, 1.0],
+                    [0.82, 0.94, -1.0]
+                ].forEach(function(p) {
+                    this.box(car, [0.28, 0.04, 0.04], [p[0], p[1], p[2]], chromeMat);
+                }.bind(this));
+                [1.0, -1.0].forEach(function(z) {
+                    this.box(car, [0.26, 0.10, 0.14], [-1.35, 1.22, z * 1.06], blackMat, true);
+                    this.box(car, [0.22, 0.08, 0.12], [-1.36, 1.22, z * 1.07], new THREE.MeshStandardMaterial({
+                        color: bodyColor,
+                        metalness: 0.90,
+                        roughness: 0.12
+                    }));
+                    this.box(car, [0.04, 0.10, 0.04], [-1.24, 1.16, z * 1.01], chromeMat);
+                }.bind(this));
+                var wheelPos = [
+                    [-1.42, 0.38, 1.02],
+                    [-1.42, 0.38, -1.02],
+                    [1.42, 0.38, 1.02],
+                    [1.42, 0.38, -1.02]
+                ];
+                wheelPos.forEach(function(wp) {
+                    var tyre = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.26, 28), tireMat);
+                    tyre.rotation.x = Math.PI / 2;
+                    tyre.position.set(wp[0], wp[1], wp[2]);
+                    tyre.castShadow = true;
+                    car.add(tyre);
+                    var rim = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.30, 0.04, 28), rimMat);
+                    rim.rotation.x = Math.PI / 2;
+                    rim.position.set(wp[0], wp[1], wp[2] + (wp[2] > 0 ? 0.14 : -0.14));
+                    car.add(rim);
+                    this.cyl(car, 0.08, 0.08, 0.03, [wp[0], wp[1], wp[2] + (wp[2] > 0 ? 0.155 : -0.155)], chromeMat, 12);
+                    this.sphere(car, 0.042, [wp[0], wp[1], wp[2] + (wp[2] > 0 ? 0.175 : -0.175)], chromeMat);
+                    for (var sp = 0; sp < 5; sp++) {
+                        var sang = (sp / 5) * Math.PI * 2,
+                            sx = Math.cos(sang) * 0.18,
+                            sy = Math.sin(sang) * 0.18;
+                        var spokeGeo = new THREE.BoxGeometry(0.04, 0.22, 0.03);
+                        var spoke = new THREE.Mesh(spokeGeo, rimMat);
+                        spoke.position.set(wp[0] + sx, wp[1] + sy, wp[2] + (wp[2] > 0 ? 0.14 : -0.14));
+                        spoke.rotation.z = sang;
+                        spoke.rotation.x = Math.PI / 2;
+                        car.add(spoke);
+                    }
+                    var disc = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.04, 20), new THREE.MeshStandardMaterial({
+                        color: 0x888888,
+                        metalness: 0.7,
+                        roughness: 0.4
+                    }));
+                    disc.rotation.x = Math.PI / 2;
+                    disc.position.set(wp[0], wp[1], wp[2] + (wp[2] > 0 ? 0.02 : -0.02));
+                    car.add(disc);
+                    this.box(car, [0.12, 0.10, 0.06], [wp[0] + 0.18, wp[1], wp[2] + (wp[2] > 0 ? 0.05 : -0.05)], new THREE.MeshStandardMaterial({
+                        color: 0x333399,
+                        metalness: 0.6
+                    }));
+                }.bind(this));
+                this.box(car, [4.0, 0.08, 1.60], [0, 0.14, 0], blackMat);
+                wheelPos.forEach(function(wp) {
+                    var arch = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.025, 8, 24, Math.PI), chromeMat);
+                    arch.position.set(wp[0], wp[1], wp[2]);
+                    arch.rotation.x = Math.PI / 2;
+                    car.add(arch);
+                }.bind(this));
+                this.cyl(car, 0.008, 0.008, 0.28, [0.5, 1.95, 0], blackMat, 6);
+                car.position.set(cx, cy, cz);
+                car.rotation.y = ry;
+                car.scale.set(carScale, carScale, carScale);
+                this.scene.add(car);
+            }
+
+            createPoolToys() {
+                var PX = 0,
+                    PZ = 32;
+                this.createBeachBall(PX - 3.5, 0.38, PZ + 2.5);
+                this.createFloatingRing(PX + 3.5, 0.22, PZ - 2.5);
+            }
+
+            createBeachBall(x, y, z) {
+                var ball = new THREE.Group();
+                var segments = 32;
+                var panelColors = [0xff2222, 0xffffff, 0x2266ff, 0xffffff, 0xffcc00, 0xffffff];
+                var baseSphere = new THREE.Mesh(new THREE.SphereGeometry(0.38, segments, segments), new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.4,
+                    metalness: 0.0
+                }));
+                ball.add(baseSphere);
+                for (var pi = 0; pi < 6; pi++) {
+                    var col = panelColors[pi];
+                    var panelGeo = new THREE.SphereGeometry(0.382, 8, segments, (pi / 6) * Math.PI * 2, Math.PI / 3);
+                    ball.add(new THREE.Mesh(panelGeo, new THREE.MeshStandardMaterial({
+                        color: col,
+                        roughness: 0.35
+                    })));
+                }
+                var shine = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.3,
+                    roughness: 0.1
+                }));
+                shine.position.set(-0.18, 0.28, 0.22);
+                ball.add(shine);
+                this.cyl(ball, 0.018, 0.018, 0.06, [0, 0.39, 0], new THREE.MeshStandardMaterial({
+                    color: 0x333333,
+                    roughness: 0.6
+                }), 8);
+                ball.position.set(x, y, z);
+                ball.rotation.z = 0.18;
+                ball.rotation.x = 0.12;
+                this.scene.add(ball);
+                this._beachBall = ball;
+            }
+
+            createFloatingRing(x, y, z) {
+                var ring = new THREE.Group();
+                var segments = 40,
+                    tubeSegs = 20,
+                    R = 0.72,
+                    r = 0.22;
+                var stripeColors = [0xff69b4, 0xffee00, 0x00ccff, 0xff6600];
+                for (var si = 0; si < stripeColors.length; si++) {
+                    var mat = new THREE.MeshStandardMaterial({
+                        color: stripeColors[si],
+                        roughness: 0.45
+                    });
+                    var torusGeo = new THREE.TorusGeometry(R, r, tubeSegs, segments, Math.PI / 2);
+                    var stripe = new THREE.Mesh(torusGeo, mat);
+                    stripe.rotation.y = (si / stripeColors.length) * Math.PI * 2;
+                    ring.add(stripe);
+                }
+                this.cyl(ring, 0.025, 0.025, 0.08, [R, 0, 0], new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.5
+                }), 8);
+                ring.rotation.x = 0.15;
+                ring.rotation.z = 0.08;
+                ring.position.set(x, y, z);
+                this.scene.add(ring);
+                this._floatingRing = ring;
+            }
+
+            createTrees() {
+                var self = this;
+                var treeDefs = [
+                    [-42, -28, 2, 1.0],
+                    [-28, -28, 1, 1.1],
+                    [-14, -28, 2, 0.9],
+                    [14, -28, 2, 1.0],
+                    [28, -28, 1, 1.2],
+                    [42, -28, 2, 0.9],
+                    [-42, -20, 1, 1.1],
+                    [42, -20, 1, 1.0],
+                    [-44, -18, 2, 1.0],
+                    [-44, -5, 0, 1.1],
+                    [-44, 8, 2, 0.95],
+                    [-44, 22, 0, 1.2],
+                    [-44, 38, 2, 1.0],
+                    [-38, -12, 1, 1.0],
+                    [-38, 18, 3, 1.0],
+                    [44, -18, 2, 1.0],
+                    [44, -5, 0, 1.1],
+                    [44, 8, 2, 0.95],
+                    [44, 22, 0, 1.2],
+                    [44, 38, 2, 1.0],
+                    [38, -12, 1, 1.0],
+                    [38, 18, 3, 1.0],
+                    [-40, 46, 0, 1.2],
+                    [-28, 48, 3, 1.0],
+                    [-16, 48, 2, 1.0],
+                    [16, 48, 2, 1.0],
+                    [28, 48, 3, 1.0],
+                    [40, 46, 0, 1.2],
+                    [-5, 18, 0, 1.0],
+                    [5, 18, 0, 1.0],
+                    [-46, -30, 3, 1.1],
+                    [46, -30, 3, 1.1],
+                    [-46, 50, 1, 1.0],
+                    [46, 50, 1, 1.0],
+                    [-34, 5, 1, 1.0],
+                    [-34, -8, 3, 0.9],
+                    [32, -8, 1, 0.95],
+                    [32, 5, 3, 1.0],
+                    [-20, 6, 0, 1.0],
+                    [20, 6, 0, 1.0]
+                ];
+                treeDefs.forEach(function(td) {
+                    var tx = td[0],
+                        tz = td[1],
+                        type = td[2],
+                        sc = td[3];
+                    switch (type) {
+                        case 0:
+                            self.buildPalmTree(tx, tz, sc);
+                            break;
+                        case 1:
+                            self.buildOakTree(tx, tz, sc);
+                            break;
+                        case 2:
+                            self.buildCypress(tx, tz, sc);
+                            break;
+                        case 3:
+                            self.buildCherry(tx, tz, sc);
+                            break;
+                    }
+                });
+            }
+
+            buildPalmTree(x, z, sc) {
+                var T = new THREE.Group();
+                sc = sc || 1.0;
+                var trunkMat = new THREE.MeshStandardMaterial({
+                    color: 0x8d6e47,
+                    roughness: 0.92
+                });
+                var segH = 0.9,
+                    segCount = 7;
+                for (var si = 0; si < segCount; si++) {
+                    var rt = 0.13 - si * 0.012,
+                        rb = 0.15 - si * 0.010,
+                        sy = si * segH + segH / 2,
+                        sx = Math.sin(si * 0.18) * 0.12;
+                    this.cyl(T, rt, rb, segH + 0.05, [sx, sy, 0], trunkMat, 8);
+                }
+                for (var ri = 0; ri < 6; ri++) this.cyl(T, 0.155, 0.155, 0.06, [Math.sin(ri * 0.18) * 0.12, ri * segH + 0.6, 0], new THREE.MeshStandardMaterial({
+                    color: 0x6d5030,
+                    roughness: 0.95
+                }), 8);
+                var topX = Math.sin((segCount - 1) * 0.18) * 0.12,
+                    topY = segCount * segH;
+                this.sphere(T, 0.22, [topX, topY + 0.1, 0], new THREE.MeshStandardMaterial({
+                    color: 0x5a4030,
+                    roughness: 0.9
+                }));
+                var frondMat = new THREE.MeshStandardMaterial({
+                    color: 0x2d6e1e,
+                    roughness: 0.85,
+                    side: THREE.DoubleSide
+                });
+                var frondMat2 = new THREE.MeshStandardMaterial({
+                    color: 0x3a8a28,
+                    roughness: 0.85,
+                    side: THREE.DoubleSide
+                });
+                for (var fi = 0; fi < 8; fi++) {
+                    var fang = (fi / 8) * Math.PI * 2;
+                    var frond = new THREE.Group();
+                    for (var fsi = 0; fsi < 5; fsi++) {
+                        var ft = fsi / 4,
+                            fw = 0.28 - fsi * 0.04,
+                            fh = 0.12,
+                            fxOff = ft * 1.8,
+                            fyOff = 0.35 - ft * ft * 0.9;
+                        var fmat = (fsi % 2 === 0) ? frondMat : frondMat2;
+                        var leafGeo = new THREE.PlaneGeometry(fw, fh + ft * 0.15);
+                        var leaf = new THREE.Mesh(leafGeo, fmat);
+                        leaf.position.set(fxOff, fyOff, 0);
+                        leaf.rotation.z = -ft * 0.45;
+                        frond.add(leaf);
+                    }
+                    frond.rotation.y = fang;
+                    frond.position.set(topX, topY + 0.14, 0);
+                    T.add(frond);
+                }
+                var cocoMat = new THREE.MeshStandardMaterial({
+                    color: 0x6b4c2a,
+                    roughness: 0.8
+                });
+                for (var ci = 0; ci < 4; ci++) {
+                    var cang = (ci / 4) * Math.PI * 2;
+                    this.sphere(T, 0.115, [topX + Math.cos(cang) * 0.18, topY - 0.12, Math.sin(cang) * 0.18], cocoMat);
+                }
+                T.scale.set(sc, sc, sc);
+                T.position.set(x, 0, z);
+                this.scene.add(T);
+            }
+
+            buildOakTree(x, z, sc) {
+                var T = new THREE.Group();
+                sc = sc || 1.0;
+                var trunkMat = new THREE.MeshStandardMaterial({
+                    color: 0x5c3d1e,
+                    roughness: 0.94
+                });
+                this.cyl(T, 0.18, 0.26, 3.2, [0, 1.6, 0], trunkMat, 10);
+                var branchMat = new THREE.MeshStandardMaterial({
+                    color: 0x4a3018,
+                    roughness: 0.95
+                });
+                [0, Math.PI * 0.65, Math.PI * 1.35].forEach(function(ba) {
+                    var br = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 1.6, 8), branchMat);
+                    br.position.set(Math.cos(ba) * 0.35, 3.2, Math.sin(ba) * 0.35);
+                    br.rotation.z = Math.cos(ba) * 0.5;
+                    br.rotation.x = Math.sin(ba) * 0.5;
+                    T.add(br);
+                });
+                var foliageColors = [0x1e6b14, 0x258518, 0x2ea31e, 0x1a5c10, 0x32b822];
+                var layers = [{
+                    y: 4.4,
+                    r: 2.0,
+                    count: 1
+                }, {
+                    y: 5.0,
+                    r: 1.75,
+                    count: 5,
+                    spread: 1.2
+                }, {
+                    y: 5.6,
+                    r: 1.5,
+                    count: 4,
+                    spread: 0.9
+                }, {
+                    y: 6.2,
+                    r: 1.1,
+                    count: 3,
+                    spread: 0.7
+                }, {
+                    y: 6.8,
+                    r: 0.7,
+                    count: 1
+                }];
+                layers.forEach(function(layer) {
+                    var mat = new THREE.MeshStandardMaterial({
+                        color: foliageColors[Math.floor(Math.random() * foliageColors.length)],
+                        roughness: 0.88
+                    });
+                    if (layer.count === 1) {
+                        this.sphere(T, layer.r, [0, layer.y, 0], mat);
+                    } else {
+                        for (var li = 0; li < layer.count; li++) {
+                            var lang = (li / layer.count) * Math.PI * 2;
+                            var lmat = new THREE.MeshStandardMaterial({
+                                color: foliageColors[li % foliageColors.length],
+                                roughness: 0.88
+                            });
+                            this.sphere(T, layer.r, [Math.cos(lang) * layer.spread, layer.y, Math.sin(lang) * layer.spread], lmat);
+                        }
+                    }
+                }.bind(this));
+                this.cyl(T, 0.30, 0.30, 0.15, [0, 0.08, 0], new THREE.MeshStandardMaterial({
+                    color: 0x3d2a10,
+                    roughness: 0.95
+                }), 10);
+                T.scale.set(sc, sc, sc);
+                T.position.set(x, 0, z);
+                this.scene.add(T);
+            }
+
+            buildCypress(x, z, sc) {
+                var T = new THREE.Group();
+                sc = sc || 1.0;
+                var trunkMat = new THREE.MeshStandardMaterial({
+                    color: 0x4a3520,
+                    roughness: 0.92
+                });
+                this.cyl(T, 0.08, 0.16, 5.5, [0, 2.75, 0], trunkMat, 8);
+                var tiers = [{
+                    y: 1.2,
+                    rb: 1.4,
+                    rt: 0.05,
+                    h: 1.5
+                }, {
+                    y: 2.3,
+                    rb: 1.15,
+                    rt: 0.05,
+                    h: 1.4
+                }, {
+                    y: 3.3,
+                    rb: 0.9,
+                    rt: 0.05,
+                    h: 1.3
+                }, {
+                    y: 4.2,
+                    rb: 0.65,
+                    rt: 0.05,
+                    h: 1.2
+                }, {
+                    y: 5.0,
+                    rb: 0.42,
+                    rt: 0.05,
+                    h: 1.1
+                }, {
+                    y: 5.7,
+                    rb: 0.22,
+                    rt: 0.02,
+                    h: 0.9
+                }];
+                var cypressColors = [0x1a5c10, 0x1e6b14, 0x155010, 0x228b22, 0x1a6016];
+                tiers.forEach(function(tier, ti) {
+                    var mat = new THREE.MeshStandardMaterial({
+                        color: cypressColors[ti % cypressColors.length],
+                        roughness: 0.88
+                    });
+                    var cone = new THREE.Mesh(new THREE.ConeGeometry(tier.rb, tier.h, 10), mat);
+                    cone.position.set(0, tier.y, 0);
+                    cone.castShadow = true;
+                    T.add(cone);
+                    var innerCone = new THREE.Mesh(new THREE.ConeGeometry(tier.rb * 0.65, tier.h * 0.8, 8), new THREE.MeshStandardMaterial({
+                        color: 0x0d3a08,
+                        roughness: 0.9,
+                        transparent: true,
+                        opacity: 0.45
+                    }));
+                    innerCone.position.set(0, tier.y - 0.1, 0);
+                    T.add(innerCone);
+                });
+                this.cyl(T, 0.01, 0.08, 0.5, [0, 6.45, 0], new THREE.MeshStandardMaterial({
+                    color: 0x1a5c10,
+                    roughness: 0.88
+                }), 6);
+                T.scale.set(sc, sc, sc);
+                T.position.set(x, 0, z);
+                this.scene.add(T);
+            }
+
+            buildCherry(x, z, sc) {
+                var T = new THREE.Group();
+                sc = sc || 1.0;
+                var trunkMat = new THREE.MeshStandardMaterial({
+                    color: 0x8a7a70,
+                    roughness: 0.88
+                });
+                this.cyl(T, 0.12, 0.20, 2.8, [0, 1.4, 0], trunkMat, 10);
+                for (var ri = 0; ri < 4; ri++) this.cyl(T, 0.205, 0.205, 0.04, [0, 0.6 + ri * 0.55, 0], new THREE.MeshStandardMaterial({
+                    color: 0x6a5a52,
+                    roughness: 0.95
+                }), 10);
+                var armMat = new THREE.MeshStandardMaterial({
+                    color: 0x7a6a60,
+                    roughness: 0.9
+                });
+                [0, Math.PI / 2, Math.PI, Math.PI * 1.5, Math.PI / 4, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75].forEach(function(aa, ai) {
+                    var armLen = 1.2 + (ai % 3) * 0.2;
+                    var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.07, armLen, 7), armMat);
+                    arm.position.set(Math.cos(aa) * armLen * 0.35, 2.8 + (ai < 4 ? 0 : 0.4), Math.sin(aa) * armLen * 0.35);
+                    arm.rotation.z = Math.cos(aa) * 0.7;
+                    arm.rotation.x = Math.sin(aa) * 0.7;
+                    T.add(arm);
+                });
+                var blossomColors = [0xffb7c5, 0xffc0cb, 0xff91a4, 0xffdde1, 0xffaabd, 0xfff0f5];
+                [
+                    [0, 4.2, 0, 1.8],
+                    [1.3, 3.8, 0, 1.3],
+                    [-1.3, 3.8, 0, 1.3],
+                    [0, 3.8, 1.3, 1.3],
+                    [0, 3.8, -1.3, 1.3],
+                    [1.0, 4.6, 1.0, 1.1],
+                    [-1.0, 4.6, 1.0, 1.1],
+                    [1.0, 4.6, -1.0, 1.1],
+                    [-1.0, 4.6, -1.0, 1.1],
+                    [0, 5.2, 0, 0.9],
+                    [0.7, 5.0, 0.7, 0.75],
+                    [-0.7, 5.0, 0.7, 0.75],
+                    [0.7, 5.0, -0.7, 0.75],
+                    [-0.7, 5.0, -0.7, 0.75]
+                ].forEach(function(bp, bi) {
+                    this.sphere(T, bp[3], [bp[0], bp[1], bp[2]], new THREE.MeshStandardMaterial({
+                        color: blossomColors[bi % blossomColors.length],
+                        roughness: 0.9
+                    }));
+                }.bind(this));
+                var petalMat = new THREE.MeshStandardMaterial({
+                    color: 0xffb7c5,
+                    roughness: 0.9,
+                    transparent: true,
+                    opacity: 0.75
+                });
+                for (var pi = 0; pi < 8; pi++) {
+                    var pang = (pi / 8) * Math.PI * 2,
+                        pr = 0.5 + Math.random() * 0.8;
+                    var petal = new THREE.Mesh(new THREE.CircleGeometry(0.18 + Math.random() * 0.12, 8), petalMat);
+                    petal.rotation.x = -Math.PI / 2;
+                    petal.position.set(Math.cos(pang) * pr, 0.05, Math.sin(pang) * pr);
+                    T.add(petal);
+                }
+                T.scale.set(sc, sc, sc);
+                T.position.set(x, 0, z);
+                this.scene.add(T);
+            }
+
+            setupControls() {
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.06;
+                this.controls.screenSpacePanning = false;
+                this.controls.minDistance = 2;
+                this.controls.maxDistance = 200;
+                this.controls.maxPolarAngle = Math.PI / 2.05;
+                this.controls.target.set(-2, 4, 0);
+            }
+
+            toggleWalls() {
+                this.wallsVisible = !this.wallsVisible;
+                this.exteriorWalls.visible = this.wallsVisible;
+            }
+
+            // ── MAIN setView — smooth animated transitions ──────────────────────────
+            setView(name) {
+                var v = VIEWS[name];
+                if (!v) return;
+
+                this.currentView = name;
+
+                // Update active button
+                document.querySelectorAll('.viewBtn').forEach(function(btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-view') === name);
+                });
+
+                // Update label
+                document.getElementById('viewName').textContent = v.label;
+                document.getElementById('viewSub').textContent = v.sub;
+
+                // Trigger fade flash then smooth camera move
+                var overlay = document.getElementById('fadeOverlay');
+                overlay.classList.add('fading');
+                setTimeout(function() {
+                    overlay.classList.remove('fading');
+                }, 350);
+
+                // Start smooth transition
+                this.transition.go(v);
+            }
+
+            animate() {
+                requestAnimationFrame(this.animate.bind(this));
+
+                // Update camera transition
+                if (this.transition) this.transition.update();
+
+                this.controls.update();
+
+                if (this.poolWaterMesh && this._waterOrigPos) {
+                    var t = this.clock.getElapsedTime();
+                    var pos = this.poolWaterMesh.geometry.attributes.position.array;
+                    var orig = this._waterOrigPos;
+                    for (var i = 0; i < pos.length; i += 3) {
+                        var ox = orig[i],
+                            oz = orig[i + 1];
+                        pos[i + 2] = Math.sin(ox * 0.9 + t * 2.0) * 0.11 + Math.cos(oz * 0.7 + t * 1.5) * 0.08 + Math.sin((ox - oz) * 0.5 + t * 2.8) * 0.055 + Math.cos((ox + oz) * 0.4 + t * 1.1) * 0.04;
+                    }
+                    this.poolWaterMesh.geometry.attributes.position.needsUpdate = true;
+                    this.poolWaterMesh.geometry.computeVertexNormals();
+                    var hue = 0.58 + Math.sin(t * 0.4) * 0.018;
+                    this.poolWaterMesh.material.color.setHSL(hue, 0.95, 0.40);
+                }
+                if (this._beachBall) {
+                    var t2 = this.clock.getElapsedTime();
+                    this._beachBall.position.y = 0.38 + Math.sin(t2 * 1.8) * 0.06;
+                    this._beachBall.rotation.y += 0.005;
+                }
+                if (this._floatingRing) {
+                    var t3 = this.clock.getElapsedTime();
+                    this._floatingRing.position.y = 0.22 + Math.sin(t3 * 1.4 + 1.2) * 0.05;
+                    this._floatingRing.rotation.z = 0.08 + Math.sin(t3 * 0.9) * 0.04;
+                }
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            setupEventListeners() {
+                window.addEventListener('resize', function() {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                }.bind(this));
+                // Kick off with a smooth entry to front view after a moment
+                setTimeout(function() {
+                    this.setView('front');
+                }.bind(this), 200);
+            }
+        }
+
+        var villApp = new Villa3DApp();
+        villApp.init();
+    </script>
+</body>
+
 </html>
